@@ -3,6 +3,6 @@ import feed from "../feed";
 
 const router = epr();
 
-router.get("/", feed);
+router.get("/:id", feed);
 
 export default router;
