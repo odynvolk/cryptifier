@@ -1,3 +1,3 @@
 # Cryptifier
 
-Example: https://localhost:3001/btc-bitcoin
+Fetches price of bitcoin from Coin Gecko and notifies users via Telegram.

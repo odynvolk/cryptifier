@@ -1,9 +1,26 @@
 {
-  "extends": ["next", "next/core-web-vitals"],
-  "plugins": ["@typescript-eslint"],
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "rules": {
     "@typescript-eslint/ban-ts-comment": "off",
-    "arrow-body-style": ["error", "as-needed"],
+    "arrow-body-style": [
+      "error",
+      "as-needed"
+    ],
     "arrow-parens": "error",
     "arrow-spacing": "error",
     "brace-style": [
@@ -14,7 +31,10 @@
       }
     ],
     "comma-spacing": "error",
-    "curly": ["error", "multi-line"],
+    "curly": [
+      "error",
+      "multi-line"
+    ],
     "dot-notation": [
       "error",
       {
@@ -41,7 +61,10 @@
     "no-eval": "error",
     "no-extend-native": "error",
     "no-extra-bind": "error",
-    "no-extra-parens": ["error", "functions"],
+    "no-extra-parens": [
+      "error",
+      "functions"
+    ],
     "no-implied-eval": "error",
     "no-iterator": "error",
     "no-label-var": "error",
@@ -63,14 +86,19 @@
     "no-script-url": "error",
     "no-sequences": "error",
     "no-shadow": "off",
-    "@typescript-eslint/no-shadow": ["error"],
+    "@typescript-eslint/no-shadow": [
+      "error"
+    ],
     "no-shadow-restricted-names": "error",
     "no-spaced-func": "error",
     "no-trailing-spaces": "error",
     "no-undef-init": "error",
     "no-underscore-dangle": "off",
     "no-unused-expressions": "error",
-    "no-use-before-define": ["error", "nofunc"],
+    "no-use-before-define": [
+      "error",
+      "nofunc"
+    ],
     "no-var": "error",
     "no-with": "error",
     "prefer-arrow-callback": "error",
@@ -88,7 +116,10 @@
         "avoidEscape": true
       }
     ],
-    "semi": ["error", "always"],
+    "semi": [
+      "error",
+      "always"
+    ],
     "semi-spacing": [
       "error",
       {
@@ -104,7 +135,13 @@
         "nonwords": false
       }
     ],
-    "strict": ["error", "global"],
-    "yoda": ["error", "never"]
+    "strict": [
+      "error",
+      "global"
+    ],
+    "yoda": [
+      "error",
+      "never"
+    ]
   }
 }

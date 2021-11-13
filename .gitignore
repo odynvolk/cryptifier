@@ -14,8 +14,8 @@ npm-debug.log
 .idea
 *.iml
 
-# Compiled client resources
-/public
+# typescript
+dist
 
 # Cache
 .eslintcache
@@ -33,5 +33,4 @@ config/_revision
 .tags
 
 .vscode
-.nyc_output
 *.log

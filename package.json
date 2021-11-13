@@ -4,8 +4,10 @@
   "main": "./src/app.ts",
   "homepage": "https://github.com/odynvolk/cryptier/",
   "scripts": {
-    "start": "ssl-proxy --source 3001 --target 3000 & nodemon ./src/app.ts",
-    "test": "jest"
+    "build": "npx tsc",
+    "start:dev": "nodemon",
+    "lint": "eslint **/*.ts --cache",
+    "test": "npm run build & ts-mocha --paths ./test/**/*.ts & npm run lint"
   },
   "author": "Alexi Rahman",
   "license": "proprietary",
@@ -17,25 +19,27 @@
   },
   "dependencies": {
     "axios": "^0.21.4",
-    "express": "^4.17.1",
-    "express-promise-router": "^3.0.3",
-    "node-cache": "^5.1.2"
+    "exp-config": "^3.0.0",
+    "node-cache": "^5.1.2",
+    "nodemon": "^2.0.15"
   },
   "devDependencies": {
-    "@types/express": "^4.17.13",
-    "@types/jest": "^26.0.24",
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "@babel/preset-typescript": "^7.16.0",
+    "@types/chai": "^4.2.22",
+    "@types/mocha": "^9.0.0",
     "@types/node": "^16.4.0",
-    "eslint": "^8.2.0",
-    "jest": "^27.3.1",
-    "jest-cucumber": "^3.0.1",
-    "nodemon": "^2.0.14",
+    "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.3.1",
+    "chai": "^4.3.4",
+    "eslint": "7.29.0",
+    "mocha-cakes-2": "^3.3.0",
+    "nock": "^13.2.1",
     "prettier": "^2.4.1",
-    "ssl-proxy": "^1.0.2",
+    "rewire": "^5.0.0",
+    "ts-mocha": "^8.0.0",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.4"
-  },
-  "files": [
-    "./lib/",
-    "./app.js"
-  ]
+  }
 }
