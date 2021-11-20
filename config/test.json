@@ -1,0 +1,5 @@
+{
+  "notifierSleep": 300,
+  "telegramApiKey": "some-key",
+  "telegramGetUpdates": true
+}

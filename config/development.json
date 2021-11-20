@@ -1,0 +1,5 @@
+{
+  "notifierSleep": 300,
+  "telegramApiKey": "REPLACE ME",
+  "telegramGetUpdates": false
+}

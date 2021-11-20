@@ -2,11 +2,13 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "composite": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es5", "es6"],
+    "lib": [
+      "es6"
+    ],
     "isolatedModules": true,
     "jsx": "preserve",
     "module": "commonjs",
@@ -25,8 +27,16 @@
     "strictFunctionTypes": true,
     "target": "es6",
     "sourceMap": true,
-    "typeRoots": ["./@types", "./node_modules/@types"]
+    "types": ["node", "mocha"],
+    "typeRoots": [
+      "./node_modules/@types"]
   },
-  "include": ["**/*.json", "**/*.ts","@types"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.json",
+    "**/*.ts"
+  ],
+  "exclude": [
+    "./node_modules/",
+    "./dist/"
+  ]
 }
