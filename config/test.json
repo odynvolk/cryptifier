@@ -1,5 +1,15 @@
 {
   "notifierSleep": 300,
   "telegramApiKey": "some-key",
-  "telegramGetUpdates": true
+  "telegramGetUpdates": true,
+  "currencies": [
+    {
+      "ticker": "bitcoin",
+      "step": 1000
+    },
+    {
+      "ticker": "ethereum",
+      "step": 100
+    }
+  ]
 }

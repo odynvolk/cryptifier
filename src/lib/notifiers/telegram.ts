@@ -39,14 +39,16 @@ const sendText = async (chatId: string, text: string) => {
   });
 };
 
-const notify = async (price: number, priceDirection: PriceDirection) => {
+const toUpperCase = (ticker: string) => `${ticker.slice(0, 1).toUpperCase()}${ticker.slice(1)}`;
+
+const notify = async (ticker: string, price: number, priceDirection: PriceDirection) => {
   try {
     const chatIds = await getChatIds();
     if (!chatIds) {
       return false;
     }
 
-    const text = `Bitcoin is <b>${priceDirection === PriceDirection.UP ? "up" : "down"}</b>! $${price}`;
+    const text = `${toUpperCase(ticker)} is <b>${priceDirection === PriceDirection.UP ? "up" : "down"}</b>! $${price}`;
     const textsToSend = chatIds.map((chatId: string) => sendText(chatId, text));
 
     await Promise.all(textsToSend);
