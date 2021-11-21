@@ -15,21 +15,30 @@ Feature("Fetch and notify", () => {
       nock("https://api.coingecko.com")
         .get("/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
         .reply(200, { bitcoin: { usd: 60221 } });
+
+      nock("https://api.coingecko.com")
+        .get("/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+        .reply(200, { ethereum: { usd: 4386 } });
     });
 
     when("application fetches price data from CoinGecko", async () => {
       await runOnce();
     });
 
-    given("CoinGecko API has an updated price above $61000", async () => {
+    given("CoinGecko API has an updated price above steps", async () => {
       nock("https://api.coingecko.com")
         .get("/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
         .reply(200, { bitcoin: { usd: 61221 } });
+
+      nock("https://api.coingecko.com")
+        .get("/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+        .reply(200, { ethereum: { usd: 4540 } });
     });
 
     and("Telegram API responds with updates", () => {
       nock("https://api.telegram.org")
         .get(`/bot${config.telegramApiKey}/getUpdates`)
+        .times(2)
         .reply(200, {
           "ok": true,
           "result": [
@@ -71,6 +80,12 @@ Feature("Fetch and notify", () => {
           "chat_id": 123, "parse_mode": "html", "text": "Bitcoin is <b>up</b>! $61221",
         })
         .reply(200);
+
+      nock("https://api.telegram.org")
+        .post(`/bot${config.telegramApiKey}/sendMessage`, {
+          "chat_id": 123, "parse_mode": "html", "text": "Ethereum is <b>up</b>! $4540",
+        })
+        .reply(200);
     });
 
     let result: boolean;
@@ -78,8 +93,8 @@ Feature("Fetch and notify", () => {
       result = await runOnce();
     });
 
-    then("Notifications and everything has went well", async () => {
-      expect(result).to.equal(true);
+    then("Notifications and everything has went well", () => {
+      expect(result).to.deep.equal(config.currencies.map(() => true));
     });
   });
 });

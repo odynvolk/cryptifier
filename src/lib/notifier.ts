@@ -4,32 +4,42 @@ import { getTicker } from "./coinGecko";
 import notifyTelegram from "./notifiers/telegram";
 import { PriceDirection } from "./common";
 
-let lastFloorPrice = 0;
+const lastFloorPrices = config.currencies.reduce((acc: any, currency: any) => {
+  acc[currency.ticker] = 0;
 
-const parseFloorPrice = (price: number) => Math.floor((price / 1000)) * 1000;
+  return acc;
+}, {});
 
-const runOnce = async () => {
-  const data = await getTicker("bitcoin");
-  if (!data?.bitcoin?.usd) {
+const parseFloorPrice = (price: number, step: number) => Math.floor((price / step)) * step;
+
+const getAndNotify = async (ticker: string, step: number) => {
+  const data = await getTicker(ticker);
+  if (!data?.[ticker]?.usd) {
     return false;
   }
 
-  const price = parseInt(data.bitcoin.usd);
-  if (!lastFloorPrice) {
-    lastFloorPrice = parseFloorPrice(price);
+  const price = parseInt(data[ticker].usd);
+  if (!lastFloorPrices[ticker]) {
+    lastFloorPrices[ticker] = parseFloorPrice(price, step);
     return true;
   }
 
-  const currentFloorPrice = parseFloorPrice(price);
-  if (currentFloorPrice < lastFloorPrice) {
-    lastFloorPrice = currentFloorPrice;
-    return await notifyTelegram(price, PriceDirection.DOWN);
-  } else if (currentFloorPrice > lastFloorPrice) {
-    lastFloorPrice = currentFloorPrice;
-    return await notifyTelegram(price, PriceDirection.UP);
+  const currentFloorPrice = parseFloorPrice(price, step);
+  if (currentFloorPrice < lastFloorPrices[ticker]) {
+    lastFloorPrices[ticker] = currentFloorPrice;
+    return await notifyTelegram(ticker, price, PriceDirection.DOWN);
+  } else if (currentFloorPrice > lastFloorPrices[ticker]) {
+    lastFloorPrices[ticker] = currentFloorPrice;
+    return await notifyTelegram(ticker, price, PriceDirection.UP);
   }
 
   return true;
+};
+
+const runOnce = async () => {
+  const funcs = config.currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step));
+
+  return await Promise.all(funcs);
 };
 
 const notifier = async () => {

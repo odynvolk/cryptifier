@@ -1,3 +1,3 @@
 # Cryptifier
 
-Fetches price of bitcoin from Coin Gecko and notifies users via Telegram.
+Fetches price of crypto currencies from Coin Gecko and notifies users via Telegram.
