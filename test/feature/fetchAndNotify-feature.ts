@@ -6,6 +6,8 @@ import "mocha-cakes-2";
 import rewire from "rewire";
 import { expect } from "chai";
 
+import cbbi from "../data/cbbi.json";
+
 const notifier = rewire("../../src/lib/notifier");
 const runOnce = notifier.__get__("runOnce");
 
@@ -21,11 +23,17 @@ Feature("Fetch and notify", () => {
         .reply(200, { ethereum: { usd: 4386 } });
     });
 
+    and("colintalkscrypto.com responds with data for CBBI", () => {
+      nock("https://colintalkscrypto.com")
+        .get("/cbbi/data/latest.json")
+        .reply(200, cbbi);
+    });
+
     when("application fetches price data from CoinGecko", async () => {
       await runOnce();
     });
 
-    given("CoinGecko API has an updated price above steps", async () => {
+    given("CoinGecko API has an updated price above steps", () => {
       nock("https://api.coingecko.com")
         .get("/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
         .reply(200, { bitcoin: { usd: 61221 } });
@@ -77,7 +85,7 @@ Feature("Fetch and notify", () => {
     and("Telegram accepts notifications to send", () => {
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", "text": "Bitcoin is <b>up</b>! $61221",
+          "chat_id": 123, "parse_mode": "html", "text": "Bitcoin is <b>up</b>! $61221 (CBBI 57%)",
         })
         .reply(200);
 

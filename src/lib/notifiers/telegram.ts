@@ -1,11 +1,8 @@
 import axios from "axios";
+import cache from "../cache";
 // @ts-ignore
 import config from "exp-config";
 import { PriceDirection } from "../common";
-
-import NodeCache from "node-cache";
-
-const cache = new NodeCache({ stdTTL: 600, checkperiod: 1200 });
 
 const getChatIdsFromConfig = () => (config.chatIds?.split(",") || []);
 
@@ -41,19 +38,22 @@ const sendText = async (chatId: string, text: string) => {
 
 const toUpperCase = (ticker: string) => `${ticker.slice(0, 1).toUpperCase()}${ticker.slice(1)}`;
 
-const notify = async (ticker: string, price: number, priceDirection: PriceDirection) => {
+const notify = async (ticker: string, price: number, cbbi: number, priceDirection: PriceDirection) => {
   try {
     const chatIds = await getChatIds();
     if (!chatIds) {
       return false;
     }
 
-    const text = `${toUpperCase(ticker)} is <b>${priceDirection === PriceDirection.UP ? "up" : "down"}</b>! $${price}`;
+    const upperCaseTicker = toUpperCase(ticker);
+    const priceDirectionText = priceDirection === PriceDirection.UP ? "up" : "down";
+    const cbbiText = ticker === "bitcoin" ? ` (CBBI ${cbbi}%)` : "";
+    const text = `${upperCaseTicker} is <b>${priceDirectionText}</b>! $${price}${cbbiText}`;
     const textsToSend = chatIds.map((chatId: string) => sendText(chatId, text));
 
     await Promise.all(textsToSend);
 
-    console.log(`Notified ${chatIds.length} users about price $${price}`);
+    console.log(`Notified ${chatIds.length} users about ${upperCaseTicker} price $${price}${cbbiText}`);
   } catch (err) {
     console.log("Failed to notify users of price change!", err);
     return false;
