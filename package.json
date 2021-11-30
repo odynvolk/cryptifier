@@ -21,7 +21,9 @@
     "axios": "^0.21.4",
     "exp-config": "^3.0.0",
     "node-cache": "^5.1.2",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "pino": "^7.5.0",
+    "split2": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
@@ -30,6 +32,7 @@
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.4.0",
+    "@types/split2": "^3.2.1",
     "@typescript-eslint/eslint-plugin": "^5.3.1",
     "@typescript-eslint/parser": "^5.3.1",
     "chai": "^4.3.4",

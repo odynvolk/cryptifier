@@ -1,4 +1,5 @@
 import axios from "axios";
+import logger from "./logger";
 
 export const getTicker = async (id: string) => {
   try {
@@ -9,11 +10,11 @@ export const getTicker = async (id: string) => {
       timeout: 5000,
     });
 
-    console.log("Got ticker from CoinGecko", data);
+    logger.debug(`Got ticker ${id} from CoinGecko`, data);
 
     return data;
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    console.error("Failed to get ticker from CoinGecko", err);
   }
 
   return null;

@@ -2,6 +2,7 @@ import axios from "axios";
 import cache from "../cache";
 // @ts-ignore
 import config from "exp-config";
+import logger from "../logger";
 import { PriceDirection } from "../common";
 
 const getChatIdsFromConfig = () => (config.chatIds?.split(",") || []);
@@ -53,9 +54,9 @@ const notify = async (ticker: string, price: number, cbbi: number, priceDirectio
 
     await Promise.all(textsToSend);
 
-    console.log(`Notified ${chatIds.length} users about ${upperCaseTicker} price $${price}${cbbiText}`);
+    logger.info(`Notified ${chatIds.length} users about ${upperCaseTicker} price $${price}${cbbiText}`);
   } catch (err) {
-    console.log("Failed to notify users of price change!", err);
+    logger.error("Failed to notify users of price change!", err);
     return false;
   }
 

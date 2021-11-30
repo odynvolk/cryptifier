@@ -1,4 +1,6 @@
 {
+  "log": "stdout",
+  "logLevel": "info",
   "notifierSleep": 300,
   "telegramApiKey": "REPLACE ME",
   "telegramGetUpdates": false,

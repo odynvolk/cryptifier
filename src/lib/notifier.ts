@@ -3,9 +3,12 @@ import { getCbbi } from "./cbbi";
 import config from "exp-config";
 import { getTicker } from "./coinGecko";
 import notifyTelegram from "./notifiers/telegram";
+import logger from "./logger";
 import { PriceDirection } from "./common";
 
-const lastFloorPrices = config.currencies.reduce((acc: any, currency: any) => {
+const currencies = typeof config.currencies === "object" ? config.currencies : JSON.parse(config.currencies);
+
+const lastFloorPrices = currencies.reduce((acc: any, currency: any) => {
   acc[currency.ticker] = 0;
 
   return acc;
@@ -40,12 +43,13 @@ const getAndNotify = async (ticker: string, step: number, cbbi: number) => {
 const runOnce = async () => {
   const cbbi = await getCbbi();
 
-  const funcs = config.currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step, cbbi));
+  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step, cbbi));
 
   return await Promise.all(funcs);
 };
 
 const notifier = async () => {
+  logger.info(`${currencies.length} currencies defined.`);
   await runOnce();
   setInterval(async () => {
     await runOnce();
