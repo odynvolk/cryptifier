@@ -1,5 +1,6 @@
 import axios from "axios";
 import cache from "./cache";
+import logger from "./logger";
 
 const METRICS = ["PiCycle",
   "RUPL",
@@ -28,23 +29,26 @@ const calculateAverage = (data: any) => {
 };
 
 export const getCbbi = async (): Promise<number> => {
-  const value = cache.get("cbbi") as number;
-  if (value) return value;
+  const value = cache.get("cbbi");
+  if (value) return value as number;
 
   try {
     const { data } = await axios.get("https://colintalkscrypto.com/cbbi/data/latest.json", {
       headers: {
         "content-type": "application/json",
       },
-      timeout: 5000,
+      timeout: 10000,
     });
 
 
     const result = calculateAverage(data);
-    console.log("Got CBBI from colintalkscrypto.com", result);
     cache.set("cbbi", result);
-  } catch (error) {
-    console.log(error);
+
+    logger.debug("Got CBBI from colintalkscrypto.com", result);
+
+    return result;
+  } catch (err) {
+    logger.error("Failed to get CBBI from colintalkscrypto.com", err);
   }
 
   return -1;
