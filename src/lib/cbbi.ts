@@ -44,11 +44,11 @@ export const getCbbi = async (): Promise<number> => {
     const result = calculateAverage(data);
     cache.set("cbbi", result);
 
-    logger.debug("Got CBBI from colintalkscrypto.com", result);
+    logger.debug(`Got CBBI from colintalkscrypto.com ${result}%`);
 
     return result;
   } catch (err) {
-    logger.error("Failed to get CBBI from colintalkscrypto.com", err);
+    logger.error(`Failed to get CBBI from colintalkscrypto.com ${err}`);
   }
 
   return -1;

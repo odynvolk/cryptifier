@@ -10,11 +10,11 @@ export const getTicker = async (id: string) => {
       timeout: 5000,
     });
 
-    logger.debug(`Got ticker ${id} from CoinGecko`, data);
+    logger.debug(`Got ticker ${id} from CoinGecko $${data[id].usd}`);
 
     return data;
   } catch (err) {
-    console.error("Failed to get ticker from CoinGecko", err);
+    logger.error(`Failed to get ticker from CoinGecko ${err}`);
   }
 
   return null;

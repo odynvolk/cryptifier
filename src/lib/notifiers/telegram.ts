@@ -56,7 +56,7 @@ const notify = async (ticker: string, price: number, cbbi: number, priceDirectio
 
     logger.info(`Notified ${chatIds.length} users about ${upperCaseTicker} price $${price}${cbbiText}`);
   } catch (err) {
-    logger.error("Failed to notify users of price change!", err);
+    logger.error(`Failed to notify users of price change! ${err}`);
     return false;
   }
 
