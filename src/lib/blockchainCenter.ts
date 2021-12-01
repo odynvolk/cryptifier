@@ -34,7 +34,7 @@ export const getRainbow = async (): Promise<string | null> => {
     const result = extractRainbow(data);
     longCache.set("rainbow", result);
 
-    logger.debug(`Got rainbow from blockchaincenter.net ${result}%`);
+    logger.debug(`Got rainbow from blockchaincenter.net ${result}`);
 
     return result;
   } catch (err) {
