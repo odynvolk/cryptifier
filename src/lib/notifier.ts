@@ -1,6 +1,7 @@
 import { getCbbi } from "./cbbi";
 // @ts-ignore
 import config from "exp-config";
+import { getRainbow } from "./blockchainCenter";
 import { getTicker } from "./coinGecko";
 import notifyTelegram from "./notifiers/telegram";
 import logger from "./logger";
@@ -16,7 +17,7 @@ const lastFloorPrices = currencies.reduce((acc: any, currency: any) => {
 
 const parseFloorPrice = (price: number, step: number) => Math.floor((price / step)) * step;
 
-const getAndNotify = async (ticker: string, step: number, cbbi: number) => {
+const getAndNotify = async (ticker: string, step: number, cbbi: number, rainbow: string) => {
   const data = await getTicker(ticker);
   if (!data?.[ticker]?.usd) {
     return false;
@@ -31,19 +32,18 @@ const getAndNotify = async (ticker: string, step: number, cbbi: number) => {
   const currentFloorPrice = parseFloorPrice(price, step);
   if (currentFloorPrice < lastFloorPrices[ticker]) {
     lastFloorPrices[ticker] = currentFloorPrice;
-    return await notifyTelegram(ticker, price, cbbi, PriceDirection.DOWN);
+    return await notifyTelegram(ticker, price, cbbi, rainbow, PriceDirection.DOWN);
   } else if (currentFloorPrice > lastFloorPrices[ticker]) {
     lastFloorPrices[ticker] = currentFloorPrice;
-    return await notifyTelegram(ticker, price, cbbi, PriceDirection.UP);
+    return await notifyTelegram(ticker, price, cbbi, rainbow, PriceDirection.UP);
   }
 
   return true;
 };
 
 const runOnce = async () => {
-  const cbbi = await getCbbi();
-
-  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step, cbbi));
+  const [cbbi, rainbow] = await Promise.all([getCbbi(), getRainbow()]);
+  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step, cbbi as unknown as number, rainbow as unknown as string));
 
   return await Promise.all(funcs);
 };

@@ -1,6 +1,6 @@
 import axios from "axios";
-import cache from "./cache";
 import logger from "./logger";
+import { longCache } from "./cache";
 
 const METRICS = ["PiCycle",
   "RUPL",
@@ -29,7 +29,7 @@ const calculateAverage = (data: any) => {
 };
 
 export const getCbbi = async (): Promise<number> => {
-  const value = cache.get("cbbi");
+  const value = longCache.get("cbbi");
   if (value) return value as number;
 
   try {
@@ -42,7 +42,7 @@ export const getCbbi = async (): Promise<number> => {
 
 
     const result = calculateAverage(data);
-    cache.set("cbbi", result);
+    longCache.set("cbbi", result);
 
     logger.debug(`Got CBBI from colintalkscrypto.com ${result}%`);
 
