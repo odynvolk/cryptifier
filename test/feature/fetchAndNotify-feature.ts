@@ -1,5 +1,6 @@
 // @ts-ignore
 import config from "exp-config";
+import fs from "fs";
 import nock from "nock";
 import "mocha-cakes-2";
 // @ts-ignore
@@ -7,6 +8,8 @@ import rewire from "rewire";
 import { expect } from "chai";
 
 import cbbi from "../data/cbbi.json";
+
+const blockchainCenter = fs.readFileSync("./test/data/blockchainCenter.html");
 
 const notifier = rewire("../../src/lib/notifier");
 const runOnce = notifier.__get__("runOnce");
@@ -27,6 +30,12 @@ Feature("Fetch and notify", () => {
       nock("https://colintalkscrypto.com")
         .get("/cbbi/data/latest.json")
         .reply(200, cbbi);
+    });
+
+    and("blockchaincenter.com responds with data for bitcoin raindow chart", () => {
+      nock("https://www.blockchaincenter.net")
+        .get("/bitcoin-rainbow-chart/")
+        .reply(200, blockchainCenter);
     });
 
     when("application fetches price data from CoinGecko", async () => {
@@ -85,7 +94,7 @@ Feature("Fetch and notify", () => {
     and("Telegram accepts notifications to send", () => {
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", "text": "Bitcoin is <b>up</b>! $61221 (CBBI 57%)",
+          "chat_id": 123, "parse_mode": "html", "text": "Bitcoin is <b>up</b>! $61221 (CBBI 57%) (Rainbow HODL!)",
         })
         .reply(200);
 

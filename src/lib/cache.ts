@@ -1,5 +1,5 @@
 import NodeCache from "node-cache";
 
-const cache = new NodeCache({ stdTTL: 600, checkperiod: 1200 });
+export const shortCache = new NodeCache({ stdTTL: 600, checkperiod: 1200 });
 
-export default cache;
+export const longCache = new NodeCache({ stdTTL: 43200, checkperiod: 86400 });
