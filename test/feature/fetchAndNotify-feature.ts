@@ -10,6 +10,7 @@ import { expect } from "chai";
 import cbbi from "../data/cbbi.json";
 
 const blockchainCenter = fs.readFileSync("./test/data/blockchainCenter.html");
+const investing = fs.readFileSync("./test/data/investing.html");
 
 const notifier = rewire("../../src/lib/notifier");
 const runOnce = notifier.__get__("runOnce");
@@ -32,10 +33,16 @@ Feature("Fetch and notify", () => {
         .reply(200, cbbi);
     });
 
-    and("blockchaincenter.com responds with data for bitcoin raindow chart", () => {
+    and("blockchaincenter.net responds with data for bitcoin raindow chart", () => {
       nock("https://www.blockchaincenter.net")
         .get("/bitcoin-rainbow-chart/")
         .reply(200, blockchainCenter);
+    });
+
+    and("investong.com responds with data for carbon emissions futures", () => {
+      nock("https://www.investing.com")
+        .get("/commodities/carbon-emissions-historical-data/")
+        .reply(200, investing);
     });
 
     when("application fetches price data from CoinGecko", async () => {
@@ -50,6 +57,12 @@ Feature("Fetch and notify", () => {
       nock("https://api.coingecko.com")
         .get("/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
         .reply(200, { ethereum: { usd: 4540 } });
+    });
+
+    and("investing.com has an updated price above steps", () => {
+      nock("https://www.investing.com")
+        .get("/commodities/carbon-emissions-historical-data/")
+        .reply(200, investing.toString().replace(/78\.75/, "79.75"));
     });
 
     and("Telegram API responds with updates", () => {
@@ -103,6 +116,12 @@ Feature("Fetch and notify", () => {
           "chat_id": 123, "parse_mode": "html", "text": "Ethereum is <b>up</b>! $4540",
         })
         .reply(200);
+
+      nock("https://api.telegram.org")
+        .post(`/bot${config.telegramApiKey}/sendMessage`, {
+          "chat_id": 123, "parse_mode": "html", "text": "Carbon Emissions are b>up</b>! €79.75",
+        })
+        .reply(200);
     });
 
     let result: boolean;
@@ -110,8 +129,8 @@ Feature("Fetch and notify", () => {
       result = await runOnce();
     });
 
-    then("Notifications and everything has went well", () => {
-      expect(result).to.deep.equal(config.currencies.map(() => true));
+    then("Notifications and everything went for bitcoin, ethereum and carbon emissions futures", () => {
+      expect(result).to.deep.equal([true, true, true]);
     });
   });
 });

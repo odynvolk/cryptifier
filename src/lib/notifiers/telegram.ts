@@ -39,7 +39,7 @@ const sendText = async (chatId: string, text: string) => {
 
 const toUpperCase = (ticker: string) => `${ticker.slice(0, 1).toUpperCase()}${ticker.slice(1)}`;
 
-const notify = async (ticker: string, price: number, cbbi: number, rainbow: string, priceDirection: PriceDirection) => {
+const notify = async (ticker: string, price: number, cbbi: number | null, rainbow: string | null, priceDirection: PriceDirection) => {
   try {
     const chatIds = await getChatIds();
     if (!chatIds) {
