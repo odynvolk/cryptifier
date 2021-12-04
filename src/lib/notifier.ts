@@ -6,6 +6,7 @@ import { getTicker } from "./coinGecko";
 import notifyTelegram from "./notifiers/telegram";
 import logger from "./logger";
 import { PriceDirection } from "./common";
+import { getCarbonEmissionsFuturesPrice } from "./investing";
 
 const currencies = typeof config.currencies === "object" ? config.currencies : JSON.parse(config.currencies);
 
@@ -17,13 +18,8 @@ const lastFloorPrices = currencies.reduce((acc: any, currency: any) => {
 
 const parseFloorPrice = (price: number, step: number) => Math.floor((price / step)) * step;
 
-const getAndNotify = async (ticker: string, step: number, cbbi: number, rainbow: string) => {
-  const data = await getTicker(ticker);
-  if (!data?.[ticker]?.usd) {
-    return false;
-  }
-
-  const price = parseInt(data[ticker].usd);
+const notify = async (priceStr: string, ticker: string, step: number, cbbi: number | null, rainbow: string | null) => {
+  const price = parseInt(priceStr);
   if (!lastFloorPrices[ticker]) {
     lastFloorPrices[ticker] = parseFloorPrice(price, step);
     return true;
@@ -41,9 +37,35 @@ const getAndNotify = async (ticker: string, step: number, cbbi: number, rainbow:
   return true;
 };
 
+const getAndNotify = async (ticker: string, step: number) => {
+  const data = await getTicker(ticker);
+  if (!data?.[ticker]?.usd) {
+    return false;
+  }
+
+  let cbbi = null, rainbow = null;
+  if (ticker === "bitcoin") {
+    [cbbi, rainbow] = await Promise.all([getCbbi(), getRainbow()]);
+  }
+
+  return notify(data[ticker].usd, ticker, step, cbbi, rainbow);
+};
+
+const getAndNotifyCef = async () => {
+  const data = await getCarbonEmissionsFuturesPrice();
+  if (!data) {
+    return false;
+  }
+
+  const ticker = "CFI2Z1";
+  const { step } = config.carbonEmissionsFutures;
+
+  return notify(data, ticker, step, null, null);
+};
+
 const runOnce = async () => {
-  const [cbbi, rainbow] = await Promise.all([getCbbi(), getRainbow()]);
-  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step, cbbi as unknown as number, rainbow as unknown as string));
+  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step));
+  funcs.push(getAndNotifyCef());
 
   return await Promise.all(funcs);
 };

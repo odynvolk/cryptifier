@@ -13,5 +13,8 @@
       "ticker": "ethereum",
       "step": 100
     }
-  ]
+  ],
+  "carbonEmissionsFutures": {
+    "step": 1
+  }
 }
