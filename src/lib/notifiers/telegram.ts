@@ -47,10 +47,9 @@ const notify = async (ticker: string, price: number, cbbi: number | null, rainbo
     }
 
     const upperCaseTicker = toUpperCase(ticker);
-    const priceDirectionText = priceDirection === PriceDirection.UP ? "up" : "down";
     const cbbiText = ticker === "bitcoin" ? ` (CBBI ${cbbi}%)` : "";
     const rainbowText = ticker === "bitcoin" ? ` (Rainbow ${rainbow})` : "";
-    const text = `${upperCaseTicker} is <b>${priceDirectionText}</b>! $${price}${cbbiText}${rainbowText}`;
+    const text = `${upperCaseTicker} is <b>${priceDirection}</b>! $${price}${cbbiText}${rainbowText}`;
     const textsToSend = chatIds.map((chatId: string) => sendText(chatId, text));
 
     await Promise.all(textsToSend);
