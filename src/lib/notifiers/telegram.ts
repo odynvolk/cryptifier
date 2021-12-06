@@ -2,7 +2,6 @@ import axios from "axios";
 // @ts-ignore
 import config from "exp-config";
 import logger from "../logger";
-import { PriceDirection } from "../common";
 import { shortCache } from "../cache";
 
 const getChatIdsFromConfig = () => (config.chatIds?.split(",") || []);
@@ -37,24 +36,16 @@ const sendText = async (chatId: string, text: string) => {
   });
 };
 
-const toUpperCase = (ticker: string) => `${ticker.slice(0, 1).toUpperCase()}${ticker.slice(1)}`;
-
-const notify = async (ticker: string, price: number, cbbi: number | null, rainbow: string | null, priceDirection: PriceDirection) => {
+const notify = async (ticker: string, text: string) => {
   try {
     const chatIds = await getChatIds();
     if (!chatIds) {
       return false;
     }
 
-    const upperCaseTicker = toUpperCase(ticker);
-    const cbbiText = ticker === "bitcoin" ? ` (CBBI ${cbbi}%)` : "";
-    const rainbowText = ticker === "bitcoin" ? ` (Rainbow ${rainbow})` : "";
-    const text = `${upperCaseTicker} is <b>${priceDirection}</b>! $${price}${cbbiText}${rainbowText}`;
     const textsToSend = chatIds.map((chatId: string) => sendText(chatId, text));
-
     await Promise.all(textsToSend);
-
-    logger.info(`Notified ${chatIds.length} users about ${upperCaseTicker} price $${price}${cbbiText}${rainbowText}`);
+    logger.info(`Notified ${chatIds.length} users about ${ticker}`);
   } catch (err) {
     logger.error(`Failed to notify users of price change! ${err}`);
     return false;

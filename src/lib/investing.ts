@@ -3,7 +3,7 @@ import cheerio from "cheerio";
 import logger from "./logger";
 import { longCache } from "./cache";
 
-const extractPrice = (html: string): string | null => {
+const extractPrice = (html: string): string => {
   const $ = cheerio.load(html);
   const lastPrice = $("#_last_8848");
 
