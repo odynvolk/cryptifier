@@ -1,7 +1,7 @@
 import axios from "axios";
 import cheerio from "cheerio";
 import logger from "./logger";
-import { longCache } from "./cache";
+import { mediumCache } from "./cache";
 
 const extractPrice = (html: string): string | null => {
   const $ = cheerio.load(html);
@@ -11,7 +11,7 @@ const extractPrice = (html: string): string | null => {
 };
 
 export const getCarbonEmissionsFuturesPrice = async (): Promise<string | null> => {
-  const value = longCache.get("carbonEmissionsFutures");
+  const value = mediumCache.get("carbonEmissionsFutures");
   if (value) return value as string;
 
   try {
@@ -20,7 +20,7 @@ export const getCarbonEmissionsFuturesPrice = async (): Promise<string | null> =
     });
 
     const result = extractPrice(data);
-    longCache.set("carbonEmissionsFutures", result);
+    mediumCache.set("carbonEmissionsFutures", result);
 
     logger.debug(`Got carbon emissions futures price from investing.com ${result}`);
 
