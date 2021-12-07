@@ -22,7 +22,7 @@ export const getCarbonEmissionsFuturesPrice = async (): Promise<string | null> =
     const result = extractPrice(data);
     mediumCache.set("carbonEmissionsFutures", result);
 
-    logger.debug(`Got carbon emissions futures price from investing.com ${result}`);
+    logger.debug(`Got carbon emissions futures price from investing.com €${result}`);
 
     return result;
   } catch (err) {
