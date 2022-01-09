@@ -115,19 +115,20 @@ Feature("Fetch and notify", () => {
     and("Telegram accepts notifications to send", () => {
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", "text": "Bitcoin is <b>up</b>! $61221 (CBBI 57%) (Rainbow HODL!)",
+          // "chat_id": 123, "parse_mode": "html", text: /Bitcoin is <b>up<\/b>! \$61221 \(CBBI 57\%\) \(Rainbowa HODL!\) /g,
+          "chat_id": 123, "parse_mode": "html", text: /Bitcoin is <b>up<\/b>! \$61221 \(CBBI 57\%\) \(Rainbow HODL!\) <a href="https:\/\/alternative.me\/crypto\/fear-and-greed-index.png.*">&#8205;<\/a>/g,
         })
         .reply(200);
 
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", "text": "Ethereum is <b>up</b>! $4540",
+          "chat_id": 123, "parse_mode": "html", text: "Ethereum is <b>up</b>! $4540",
         })
         .reply(200);
 
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", "text": "Carbon emissions futures are <b>up</b>! €79.75",
+          "chat_id": 123, "parse_mode": "html", text: "Carbon emissions futures are <b>up</b>! €79.75",
         })
         .reply(200);
     });

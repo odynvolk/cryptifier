@@ -49,7 +49,8 @@ const getAndNotify = async (ticker: string, step: number) => {
   if (priceChange !== PriceChange.NO_CHANGE) {
     if (ticker === "bitcoin") {
       const [cbbi, rainbow] = await Promise.all([getCbbi(), getRainbow()]);
-      const text = `Bitcoin is <b>${priceChange}</b>! $${price} (CBBI ${cbbi}%) (Rainbow ${rainbow})`;
+      const fgUrl = `https://alternative.me/crypto/fear-and-greed-index.png?${Math.random()}`;
+      const text = `Bitcoin is <b>${priceChange}</b>! $${price} (CBBI ${cbbi}%) (Rainbow ${rainbow}) <a href="${fgUrl}">&#8205;</a>`;
       return await notifyTelegram(ticker, text);
     }
 
