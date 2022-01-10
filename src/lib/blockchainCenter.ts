@@ -16,7 +16,7 @@ const extractRainbow = (html: string): string | null => {
     const pCurrent = parsePrice(current);
     const pCeil = parsePrice(ceil);
     if (pFloor < pCurrent && pCurrent < pCeil) {
-      return (title?.match(/'.*'/) || [])[0].replace(/'/g, "") ?? null;
+      return `"${(title?.match(/'.*'/) || [])[0].replace(/'/g, "")}"` ?? null;
     }
   }
   return null;
