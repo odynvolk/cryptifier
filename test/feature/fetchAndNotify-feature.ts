@@ -10,6 +10,7 @@ import "mocha-cakes-2";
 import rewire from "rewire";
 import { expect } from "chai";
 
+import alternativeMe from "../data/alternativeMe.json";
 import cbbi from "../data/cbbi.json";
 
 const blockchainCenter = fs.readFileSync("./test/data/blockchainCenter.html");
@@ -45,6 +46,12 @@ Feature("Fetch and notify", () => {
       nock("https://www.blockchaincenter.net")
         .get("/bitcoin-rainbow-chart/")
         .reply(200, blockchainCenter);
+    });
+
+    and("alternative.me responds with data for fear and greed index", () => {
+      nock("https://api.alternative.me")
+        .get("/fng/?limit=1&format=json")
+        .reply(200, alternativeMe);
     });
 
     and("investong.com responds with data for carbon emissions futures", () => {
@@ -115,8 +122,10 @@ Feature("Fetch and notify", () => {
     and("Telegram accepts notifications to send", () => {
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          // "chat_id": 123, "parse_mode": "html", text: /Bitcoin is <b>up<\/b>! \$61221 \(CBBI 57\%\) \(Rainbowa HODL!\) /g,
-          "chat_id": 123, "parse_mode": "html", text: /Bitcoin is <b>up<\/b>! \$61221 \(CBBI 57\%\) \(Rainbow HODL!\) <a href="https:\/\/alternative.me\/crypto\/fear-and-greed-index.png.*">&#8205;<\/a>/g,
+          "chat_id": 123, "parse_mode": "html", text: "Bitcoin is <b>up</b>: $61221\n" +
+            "F&GI: \"Extreme Fear\" | 23\n" +
+            "CBBI: 57%\n" +
+            "Rainbow Chart: \"HODL!\"",
         })
         .reply(200);
 

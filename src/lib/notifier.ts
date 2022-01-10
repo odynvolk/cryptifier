@@ -2,6 +2,7 @@ import { getCbbi } from "./cbbi";
 // @ts-ignore
 import config from "exp-config";
 import { getCarbonEmissionsFuturesPrice } from "./investing";
+import { getFearGreedIndex} from "./alternativeMe";
 import { getRainbow } from "./blockchainCenter";
 import { getTicker } from "./coinGecko";
 import logger from "./logger";
@@ -48,9 +49,8 @@ const getAndNotify = async (ticker: string, step: number) => {
   const priceChange = getPriceChange(ticker, price, step);
   if (priceChange !== PriceChange.NO_CHANGE) {
     if (ticker === "bitcoin") {
-      const [cbbi, rainbow] = await Promise.all([getCbbi(), getRainbow()]);
-      const fgUrl = `https://alternative.me/crypto/fear-and-greed-index.png?${Math.random()}`;
-      const text = `Bitcoin is <b>${priceChange}</b>! $${price} (CBBI ${cbbi}%) (Rainbow ${rainbow}) <a href="${fgUrl}">&#8205;</a>`;
+      const [cbbi, rainbow, fgi] = await Promise.all([getCbbi(), getRainbow(), getFearGreedIndex()]);
+      const text = `Bitcoin is <b>${priceChange}</b>: $${price}\nF&GI: ${fgi}\nCBBI: ${cbbi}%\nRainbow Chart: ${rainbow}`;
       return await notifyTelegram(ticker, text);
     }
 
