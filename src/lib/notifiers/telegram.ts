@@ -17,6 +17,7 @@ const getChatIds = async () => {
   });
 
   const chatIds = getChatIdsFromConfig().concat(data.result.map((update: any) => update.message.chat.id));
+  logger.debug(`Got chatIds from Telegram: ${JSON.stringify(chatIds)}`);
   const result = [...new Set(chatIds) as unknown as string];
   shortCache.set("getUpdates", result);
 
@@ -47,6 +48,7 @@ const notify = async (ticker: string, text: string) => {
     await Promise.all(textsToSend);
     logger.info(`Notified ${chatIds.length} users about ${ticker}`);
   } catch (err) {
+    console.log("@@@ telegram.ts notify 50", err);
     logger.error(`Failed to notify users of price change! ${err}`);
     return false;
   }
