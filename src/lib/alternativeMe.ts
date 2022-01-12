@@ -14,7 +14,7 @@ export const getFearGreedIndex = async (): Promise<string> => {
       timeout: 10000,
     });
 
-    const result = `"${data?.data[0]?.value_classification}" \| ${data?.data[0]?.value}`;
+    const result = `"${data?.data[0]?.value_classification}" \| ${data?.data[0]?.value}`; // eslint-disable-line no-useless-escape
     longCache.set("f&gi", result);
 
     logger.debug(`Got F&GI from api.alternative.me ${result}`);
