@@ -7,14 +7,14 @@
   "currencies": [
     {
       "ticker": "bitcoin",
-      "step": 1000
+      "increment": 1000
     },
     {
       "ticker": "ethereum",
-      "step": 100
+      "increment": 100
     }
   ],
   "carbonEmissionsFutures": {
-    "step": 1
+    "increment": 1
   }
 }

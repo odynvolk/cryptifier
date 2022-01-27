@@ -32,7 +32,7 @@ Create a .env file with values needed in your setup.
 
 ```
 logLevel=info|debug
-currencies=[{"ticker": "bitcoin","step": 1000}]
+currencies=[{"ticker": "bitcoin","increment": 1000}]
 telegramApiKey=secret-key-for-bot
 chatIds=some-id,some-other-id
 ```

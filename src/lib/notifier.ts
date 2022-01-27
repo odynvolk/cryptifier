@@ -17,15 +17,15 @@ const lastFloorPrices = currencies.reduce((acc: any, currency: any) => {
   return acc;
 }, { CFI2Z1: 0 });
 
-const parseFloorPrice = (price: number, step: number) => Math.floor((price / step)) * step;
+const parseFloorPrice = (price: number, increment: number) => Math.floor((price / increment)) * increment;
 
-const getPriceChange = (ticker: string, price: number, step: number) => {
+const getPriceChange = (ticker: string, price: number, increment: number) => {
   if (!lastFloorPrices[ticker]) {
-    lastFloorPrices[ticker] = parseFloorPrice(price, step);
+    lastFloorPrices[ticker] = parseFloorPrice(price, increment);
     return PriceChange.NO_CHANGE;
   }
 
-  const currentFloorPrice = parseFloorPrice(price, step);
+  const currentFloorPrice = parseFloorPrice(price, increment);
   if (currentFloorPrice < lastFloorPrices[ticker]) {
     lastFloorPrices[ticker] = currentFloorPrice;
     return PriceChange.DOWN;
@@ -39,14 +39,14 @@ const getPriceChange = (ticker: string, price: number, step: number) => {
 
 const toUpperCase = (ticker: string) => `${ticker.slice(0, 1).toUpperCase()}${ticker.slice(1)}`;
 
-const getAndNotify = async (ticker: string, step: number) => {
+const getAndNotify = async (ticker: string, increment: number) => {
   const data = await getTicker(ticker);
   if (!data?.[ticker]?.usd) {
     return false;
   }
 
   const price = parseInt(data?.[ticker]?.usd);
-  const priceChange = getPriceChange(ticker, price, step);
+  const priceChange = getPriceChange(ticker, price, increment);
   if (priceChange !== PriceChange.NO_CHANGE) {
     if (ticker === "bitcoin") {
       const [cbbi, rainbow, fgi] = await Promise.all([getCbbi(), getRainbow(), getFearGreedIndex()]);
@@ -70,7 +70,7 @@ const getAndNotifyCef = async () => {
 
   const ticker = "CFI2Z1";
   const price = parseInt(data);
-  const priceChange = getPriceChange(ticker, price, config.carbonEmissionsFutures.step);
+  const priceChange = getPriceChange(ticker, price, config.carbonEmissionsFutures.increment);
   if (priceChange !== PriceChange.NO_CHANGE) {
     const text = `Carbon emissions futures are <b>${priceChange}</b>! €${data}`;
     return await notifyTelegram(ticker, text);
@@ -80,7 +80,7 @@ const getAndNotifyCef = async () => {
 };
 
 const runOnce = async () => {
-  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.step));
+  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.increment));
   funcs.push(getAndNotifyCef());
 
   return await Promise.all(funcs);
