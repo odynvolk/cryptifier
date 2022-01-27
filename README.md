@@ -2,14 +2,15 @@
 
 Fetches...
 
-1. Price of crypto currencies from Coin Gecko
-2. CBBI from colintalkscrypto.com
-3. Rainbow chart from blockchaincenter.net
-4. Carbon Emissions Futures from investing.com
+1. Price of crypto currencies from [https://www.coingecko.com/](https://colintalkscrypto.com/)
+2. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
+3. Rainbow chart from [https://www.blockchaincenter.net/](https://www.blockchaincenter.net/)
+4. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
+5. Carbon Emissions Futures from [https://www.investing.com/](https://www.investing.com/)
 
-Notifies users via...
+Notifies users of price going up or down in increments via...
 
-1. Telegram
+1. Telegram via a TelegramBot
 
 ## Setup
 
@@ -21,8 +22,19 @@ An easy way to setup Node is to use `nvm`. Then run `nvm use` to get the proper 
 
 Then install the dependencies...
 
-```
+```bash
 $ npm ci
+```
+
+Configuration:
+
+Create a .env file with values needed in your setup.
+
+```
+logLevel=info|debug
+currencies=[{"ticker": "bitcoin","step": 1000}]
+telegramApiKey=secret-key-for-bot
+chatIds=some-id,some-other-id
 ```
 
 ## Development
