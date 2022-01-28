@@ -4,7 +4,7 @@ import config from "exp-config";
 import logger from "../logger";
 import { shortCache } from "../cache";
 
-const getChatIdsFromConfig = () => (config.chatIds?.split(",") || []);
+const getChatIdsFromConfig = () => (config.telegramChatIds?.split(",") || []);
 
 const getChatIds = async () => {
   if (!config.telegramGetUpdates) return getChatIdsFromConfig();
@@ -48,7 +48,6 @@ const notify = async (ticker: string, text: string) => {
     await Promise.all(textsToSend);
     logger.info(`Notified ${chatIds.length} users about ${ticker}`);
   } catch (err) {
-    console.log("@@@ telegram.ts notify 50", err);
     logger.error(`Failed to notify users of price change! ${err}`);
     return false;
   }

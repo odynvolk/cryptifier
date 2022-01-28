@@ -34,7 +34,7 @@ Create a .env file with values needed in your setup.
 logLevel=info|debug
 currencies=[{"ticker": "bitcoin","increment": 1000}]
 telegramApiKey=secret-key-for-bot
-chatIds=some-id,some-other-id
+telegramChatIds=some-id,some-other-id
 ```
 
 ## Development
@@ -45,6 +45,12 @@ Useful commands:
 
 ## Testing
 
-Tests are written in a BDD/Cucumber type syntax using `mocha-cakes-2`. Try to write tests in a meaningful way as to describe what it is you're testing and what resources are available. Testing does not only test a piece of code that it actually works but is also used for documentation purposes. Focus on testing what is vital for the feature.
+Tests are written in a BDD/Cucumber type syntax using `mocha-cakes-2`. Try to write tests in a meaningful way as to 
+describe what it is you're testing and what resources are available. Testing does not only test a piece of code that it 
+actually works but is also used for documentation purposes. Focus on testing what is vital for the feature.
 
-To run all tests (including linting): `$ npm test`
+To run all tests (including linting)...
+
+```bash
+$ npm test
+```

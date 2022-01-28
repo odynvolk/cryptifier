@@ -1,8 +1,18 @@
 {
-  "name": "Cryptier",
+  "name": "cryptifier",
   "version": "0.1.0",
   "main": "./src/app.ts",
-  "homepage": "https://github.com/odynvolk/cryptier/",
+  "homepage": "https://github.com/odynvolk/cryptifier",
+  "description": "Application for retrieving prices of crypto currencies and notifying via Telegram.",
+  "keywords": [
+    "typescript",
+    "crypto",
+    "telegram",
+    "telegram-bot",
+    "cryptocurrency",
+    "cryptocurrencies",
+    "carbon-emissions"
+  ],
   "scripts": {
     "build": "npx tsc",
     "start:dev": "nodemon",
@@ -10,8 +20,7 @@
     "test": "npm run build & ts-mocha --paths ./test/**/*.ts & npm run lint"
   },
   "author": "Alexi Rahman",
-  "license": "proprietary",
-  "private": true,
+  "license": "MIT",
   "prettier": {
     "printWidth": 120,
     "arrowParens": "always",
