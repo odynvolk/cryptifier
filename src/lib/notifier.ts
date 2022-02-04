@@ -1,10 +1,12 @@
-import { getCbbi } from "./cbbi";
 // @ts-ignore
 import config from "exp-config";
-import { getCarbonEmissionsFuturesPrice } from "./investing";
-import { getFearGreedIndex} from "./alternativeMe";
-import { getRainbow } from "./blockchainCenter";
-import { getTicker } from "./coinGecko";
+
+import { getCarbonEmissionsFuturesPrice } from "./sources/investing";
+import { getCbbi } from "./sources/cbbi";
+import { getFearGreedIndex} from "./sources/alternativeMe";
+import { getGrayscalePremium} from "./sources/bitbo";
+import { getRainbow } from "./sources/blockchainCenter";
+import { getTicker } from "./sources/coinGecko";
 import logger from "./logger";
 import notifyTelegram from "./notifiers/telegram";
 import { PriceChange } from "./common";
@@ -49,8 +51,8 @@ const getAndNotify = async (ticker: string, increment: number) => {
   const priceChange = getPriceChange(ticker, price, increment);
   if (priceChange !== PriceChange.NO_CHANGE) {
     if (ticker === "bitcoin") {
-      const [cbbi, rainbow, fgi] = await Promise.all([getCbbi(), getRainbow(), getFearGreedIndex()]);
-      const text = `Bitcoin is <b>${priceChange}</b>: $${price}\nF&GI: ${fgi}\nCBBI: ${cbbi}%\nRainbow Chart: ${rainbow}`;
+      const [cbbi, rainbow, fgi, gp] = await Promise.all([getCbbi(), getRainbow(), getFearGreedIndex(), getGrayscalePremium()]);
+      const text = `Bitcoin is <b>${priceChange}</b>: $${price}\nF&GI: ${fgi}\nCBBI: ${cbbi}%\nRainbow Chart: ${rainbow}\nGrayscale Premium: ${gp}%`;
       return await notifyTelegram(ticker, text);
     }
 

@@ -1,5 +1,6 @@
 import axios from "axios";
-import logger from "./logger";
+
+import logger from "../logger";
 
 export const getTicker = async (id: string) => {
   try {

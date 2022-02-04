@@ -1,6 +1,7 @@
 import axios from "axios";
-import logger from "./logger";
-import { longCache } from "./cache";
+
+import logger from "../logger";
+import { longCache } from "../cache";
 
 const METRICS = ["PiCycle",
   "RUPL",
