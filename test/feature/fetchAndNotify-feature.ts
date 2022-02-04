@@ -2,17 +2,18 @@
 import ck from "chronokinesis";
 // @ts-ignore
 import config from "exp-config";
+import { expect } from "chai";
 import fs from "fs";
 import nock from "nock";
 import moment from "moment";
 import "mocha-cakes-2";
 // @ts-ignore
 import rewire from "rewire";
-import { expect } from "chai";
 
 import alternativeMe from "../data/alternativeMe.json";
 import cbbi from "../data/cbbi.json";
 
+const bitbo = fs.readFileSync("./test/data/bitbo.html");
 const blockchainCenter = fs.readFileSync("./test/data/blockchainCenter.html");
 const investing = fs.readFileSync("./test/data/investing.html");
 
@@ -52,6 +53,12 @@ Feature("Fetch and notify", () => {
       nock("https://api.alternative.me")
         .get("/fng/?limit=1&format=json")
         .reply(200, alternativeMe);
+    });
+
+    and("bitbo.io has data", () => {
+      nock("https://bitbo.io")
+        .get("/")
+        .reply(200, bitbo);
     });
 
     and("investong.com responds with data for carbon emissions futures", () => {
@@ -125,7 +132,8 @@ Feature("Fetch and notify", () => {
           "chat_id": 123, "parse_mode": "html", text: "Bitcoin is <b>up</b>: $61221\n" +
             "F&GI: \"Extreme Fear\" | 23\n" +
             "CBBI: 57%\n" +
-            "Rainbow Chart: \"HODL!\"",
+            "Rainbow Chart: \"HODL!\"\n" +
+            "Grayscale Premium: -26.25%",
         })
         .reply(200);
 

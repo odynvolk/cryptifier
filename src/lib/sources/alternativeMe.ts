@@ -1,6 +1,7 @@
 import axios from "axios";
-import logger from "./logger";
-import { longCache } from "./cache";
+
+import logger from "../logger";
+import { longCache } from "../cache";
 
 export const getFearGreedIndex = async (): Promise<string> => {
   const value = longCache.get("f&gi");
@@ -24,5 +25,5 @@ export const getFearGreedIndex = async (): Promise<string> => {
     logger.error(`Failed to get F&GI from api.alternative.me ${err}`);
   }
 
-  return "";
+  return "N/A";
 };

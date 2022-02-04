@@ -1,11 +1,12 @@
 import axios from "axios";
 import cheerio from "cheerio";
-import logger from "./logger";
-import { longCache } from "./cache";
+
+import logger from "../logger";
+import { longCache } from "../cache";
 
 const parsePrice = (price: string) => parseInt(price.replace("$", "").replace("Moon", Number.MAX_SAFE_INTEGER.toString()));
 
-const extractRainbow = (html: string): string | null => {
+const extractRainbow = (html: string): string => {
   const $ = cheerio.load(html);
   const intervals = $("[data-placement=\"top\"]");
 
@@ -19,10 +20,11 @@ const extractRainbow = (html: string): string | null => {
       return `"${(title?.match(/'.*'/) || [])[0].replace(/'/g, "")}"` ?? null;
     }
   }
-  return null;
+
+  return "N/A";
 };
 
-export const getRainbow = async (): Promise<string | null> => {
+export const getRainbow = async (): Promise<string> => {
   const value = longCache.get("rainbow");
   if (value) return value as string;
 
@@ -41,5 +43,5 @@ export const getRainbow = async (): Promise<string | null> => {
     logger.error(`Failed to get rainbow from blockchaincenter.net ${err}`);
   }
 
-  return null;
+  return "N/A";
 };
