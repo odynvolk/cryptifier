@@ -71,7 +71,7 @@ Feature("Fetch and notify", () => {
       await runOnce();
     });
 
-    given("CoinGecko API has an updated price above steps", () => {
+    given("CoinGecko API has an updated price above increments", () => {
       nock("https://api.coingecko.com")
         .get("/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
         .reply(200, { bitcoin: { usd: 61221 } });
@@ -81,7 +81,7 @@ Feature("Fetch and notify", () => {
         .reply(200, { ethereum: { usd: 4540 } });
     });
 
-    and("investing.com has an updated price above steps", () => {
+    and("investing.com has an updated price above increments", () => {
       nock("https://www.investing.com")
         .get("/commodities/carbon-emissions-historical-data/")
         .reply(200, investing.toString().replace(/78\.75/g, "79.75"));
