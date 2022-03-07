@@ -3,21 +3,22 @@ import config from "exp-config";
 
 import { getCarbonEmissionsFuturesPrice } from "./sources/investing";
 import { getCbbi } from "./sources/cbbi";
-import { getFearGreedIndex} from "./sources/alternativeMe";
-import { getGrayscalePremium} from "./sources/bitbo";
+import { getFearGreedIndex } from "./sources/alternativeMe";
+import { getGrayscalePremium } from "./sources/bitbo";
 import { getRainbow } from "./sources/blockchainCenter";
 import { getTicker } from "./sources/coinGecko";
 import logger from "./logger";
 import notifyTelegram from "./notifiers/telegram";
 import { PriceChange } from "./common";
 
-const currencies = typeof config.currencies === "object" ? config.currencies : JSON.parse(config.currencies);
+const CURRENCIES = typeof config.currencies === "object" ? config.currencies : JSON.parse(config.currencies);
+const CARBON_EMISSIONS_FUTURES = typeof config.carbonEmissionsFutures === "object" ? config.carbonEmissionsFutures : JSON.parse(config.carbonEmissionsFutures);
 
-const lastFloorPrices = currencies.reduce((acc: any, currency: any) => {
-  acc[currency.ticker] = 0;
+const lastFloorPrices = CURRENCIES.reduce((acc: any, { ticker }: { ticker: string }) => {
+  acc[ticker] = 0;
 
   return acc;
-}, { CFI2Z1: 0 });
+}, { [CARBON_EMISSIONS_FUTURES.ticker]: 0 });
 
 const parseFloorPrice = (price: number, increment: number) => Math.floor((price / increment)) * increment;
 
@@ -70,26 +71,23 @@ const getAndNotifyCef = async () => {
     return false;
   }
 
-  const ticker = "CFI2Z1";
   const price = parseInt(data);
-  const priceChange = getPriceChange(ticker, price, config.carbonEmissionsFutures.increment);
+  const priceChange = getPriceChange(CARBON_EMISSIONS_FUTURES.ticker, price, CARBON_EMISSIONS_FUTURES.increment);
   if (priceChange !== PriceChange.NO_CHANGE) {
     const text = `Carbon emissions futures are <b>${priceChange}</b>! €${data}`;
-    return await notifyTelegram(ticker, text);
+    return await notifyTelegram(CARBON_EMISSIONS_FUTURES.ticker, text);
   }
 
   return false;
 };
 
 const runOnce = async () => {
-  const funcs = currencies.map((currency: any) => getAndNotify(currency.ticker, currency.increment));
-  funcs.push(getAndNotifyCef());
-
-  return await Promise.all(funcs);
+  const funcs = CURRENCIES.map((currency: any) => getAndNotify(currency.ticker, currency.increment));
+  return await Promise.all([...funcs, getAndNotifyCef()]);
 };
 
 const notifier = async () => {
-  logger.info(`${currencies.length} currencies defined.`);
+  logger.info(`${CURRENCIES.length} currencies defined.`);
   await runOnce();
 
   setInterval(async () => {

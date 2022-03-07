@@ -15,6 +15,7 @@
     }
   ],
   "carbonEmissionsFutures": {
+    "ticker": "CFI2Z1",
     "increment": 1
   }
 }

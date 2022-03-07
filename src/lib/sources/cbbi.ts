@@ -12,7 +12,6 @@ const METRICS = ["PiCycle",
   "MVRV",
   "ReserveRisk",
   "Woobull",
-  "HalvingToPeak",
   "GoogleTrends",
   "Confidence",
 ];
@@ -40,7 +39,6 @@ export const getCbbi = async (): Promise<number> => {
       },
       timeout: 10000,
     });
-
 
     const result = calculateAverage(data);
     longCache.set("cbbi", result);
