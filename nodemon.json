@@ -2,5 +2,5 @@
   "watch": ["src"],
   "ext": ".ts,",
   "ignore": [],
-  "exec": "ts-node ./src/app.ts"
+  "exec": "ts-node --transpileOnly ./src/app.ts"
 }
