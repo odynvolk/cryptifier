@@ -129,11 +129,7 @@ Feature("Fetch and notify", () => {
     and("Telegram accepts notifications to send", () => {
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", text: "Bitcoin is <b>up</b>: $61221\n" +
-            "F&GI: \"Extreme Fear\" | 23\n" +
-            "CBBI: 57%\n" +
-            "Rainbow Chart: \"HODL!\"\n" +
-            "Grayscale Premium: -26.25%",
+          "chat_id": 123, "parse_mode": "html", text: /Bitcoin is <b>up<\/b>: \$61221/gi,
         })
         .reply(200);
 
