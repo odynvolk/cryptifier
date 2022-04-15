@@ -1,6 +1,6 @@
 {
   "name": "cryptifier",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "./src/app.ts",
   "homepage": "https://github.com/odynvolk/cryptifier",
   "description": "Application for retrieving prices of crypto currencies and notifying via Telegram.",
