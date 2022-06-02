@@ -1,0 +1,13 @@
+{
+  "count": 12952,
+  "next": "https://bitnodes.io/api/v1/snapshots/?limit=1&page=2",
+  "previous": null,
+  "results": [
+    {
+      "url": "https://bitnodes.io/api/v1/snapshots/1654198709/",
+      "timestamp": 1654198709,
+      "total_nodes": 16301,
+      "latest_height": 739023
+    }
+  ]
+}
