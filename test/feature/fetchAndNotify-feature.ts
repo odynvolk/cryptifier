@@ -84,7 +84,7 @@ Feature("Fetch and notify", () => {
     and("investing.com has an updated price above increments", () => {
       nock("https://www.investing.com")
         .get("/commodities/carbon-emissions-historical-data/")
-        .reply(200, investing.toString().replace(/78\.75/g, "79.75"));
+        .reply(200, investing.toString().replace(/89\.80/g, "99.80"));
     });
 
     and("Telegram API responds with updates", () => {
@@ -141,7 +141,7 @@ Feature("Fetch and notify", () => {
 
       nock("https://api.telegram.org")
         .post(`/bot${config.telegramApiKey}/sendMessage`, {
-          "chat_id": 123, "parse_mode": "html", text: "Carbon emissions futures are <b>up</b>! €79.75",
+          "chat_id": 123, "parse_mode": "html", text: "Carbon emissions futures are <b>up</b>! €99.80",
         })
         .reply(200);
     });
