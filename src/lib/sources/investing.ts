@@ -1,14 +1,16 @@
 import axios from "axios";
 
-import cheerio from "cheerio";
 import logger from "../logger";
 import { mediumCache } from "../cache";
 
 const extractPrice = (html: string): string => {
-  const $ = cheerio.load(html);
-  const lastPrice = $("#_last_8848");
+  const m = html.match(/instrument-price-last">[\d.]*<\/span>/) ?? [];
+  if (m?.length > 0) {
+    const m2 = m[0].match(/\d+.\d+/) ?? [];
+    if (m2?.length > 0) return m2[0];
+  }
 
-  return lastPrice.text();
+  return "N/A";
 };
 
 export const getCarbonEmissionsFuturesPrice = async (): Promise<string> => {
