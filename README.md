@@ -3,10 +3,10 @@
 Fetches...
 
 1. Price of crypto currencies from [https://www.coingecko.com/](https://colintalkscrypto.com/)
-2. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
-3. Rainbow chart from [https://www.blockchaincenter.net/](https://www.blockchaincenter.net/)
-4. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
-5. Carbon Emissions Futures from [https://www.investing.com/](https://www.investing.com/)
+2. Number of reacable Bitcoin nodes from [https://bitnodes.io/](https://bitnodes.io/)
+3. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
+3. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
+4. Carbon Emissions Futures from [https://www.investing.com/](https://www.investing.com/)
 5. Grayscale Bitcoin Premium from [https://bitbo.io/](https://bitbo.io/)
 
 Notifies users of price going up or down in increments via...

@@ -3,7 +3,8 @@ import axios from "axios";
 import logger from "../logger";
 import { longCache } from "../cache";
 
-const METRICS = ["PiCycle",
+const METRICS = [
+  "PiCycle",
   "RUPL",
   "RHODL",
   "Puell",
@@ -12,7 +13,6 @@ const METRICS = ["PiCycle",
   "MVRV",
   "ReserveRisk",
   "Woobull",
-  "GoogleTrends",
   "Confidence",
 ];
 
