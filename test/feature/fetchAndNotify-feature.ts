@@ -11,6 +11,7 @@ import "mocha-cakes-2";
 import rewire from "rewire";
 
 import alternativeMe from "../data/alternativeMe.json";
+import bitnodes from "../data/bitnodes.json";
 import cbbi from "../data/cbbi.json";
 
 const bitbo = fs.readFileSync("./test/data/bitbo.html");
@@ -54,10 +55,16 @@ Feature("Fetch and notify", () => {
         .reply(200, bitbo);
     });
 
-    and("investong.com responds with data for carbon emissions futures", () => {
+    and("investing.com responds with data for carbon emissions futures", () => {
       nock("https://www.investing.com")
         .get("/commodities/carbon-emissions-historical-data/")
         .reply(200, investing);
+    });
+
+    and("bitnodes.io responds with data for number of reachable nodes", () => {
+      nock("https://bitnodes.io")
+        .get("/api/v1/snapshots/?limit=1")
+        .reply(200, bitnodes);
     });
 
     and("application fetches price data from CoinGecko", async () => {
