@@ -2,7 +2,7 @@
 import config from "exp-config";
 
 import { getBitnodes } from "./sources/bitnodes";
-import { getCarbonEmissionsFuturesPrice } from "./sources/investing";
+import { getCarbonEmissionsFuturesPrice } from "./sources/sandbag";
 import { getCbbi } from "./sources/cbbi";
 import { getFearGreedIndex } from "./sources/alternativeMe";
 import { getGrayscalePremium } from "./sources/bitbo";

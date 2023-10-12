@@ -15,7 +15,7 @@ import bitnodes from "../data/bitnodes.json";
 import cbbi from "../data/cbbi.json";
 
 const bitbo = fs.readFileSync("./test/data/bitbo.html");
-const investing = fs.readFileSync("./test/data/investing.html");
+const sandbag = fs.readFileSync("./test/data/sandbag.json");
 
 const notifier = rewire("../../src/lib/notifier");
 const runOnce = notifier.__get__("runOnce");
@@ -55,10 +55,10 @@ Feature("Fetch and notify", () => {
         .reply(200, bitbo);
     });
 
-    and("investing.com responds with data for carbon emissions futures", () => {
-      nock("https://www.investing.com")
-        .get("/commodities/carbon-emissions-historical-data/")
-        .reply(200, investing);
+    and("sandbag.be responds with data for carbon emissions futures", () => {
+      nock("https://sandbag-carbon-price-viewer.herokuapp.com")
+        .get("/_dash-layout")
+        .reply(200, sandbag);
     });
 
     and("bitnodes.io responds with data for number of reachable nodes", () => {
@@ -81,10 +81,10 @@ Feature("Fetch and notify", () => {
         .reply(200, { ethereum: { usd: 4540 } });
     });
 
-    and("investing.com has an updated price above increments", () => {
-      nock("https://www.investing.com")
-        .get("/commodities/carbon-emissions-historical-data/")
-        .reply(200, investing.toString().replace(/89\.80/g, "99.80"));
+    and("sandbag.be has an updated price above increments", () => {
+      nock("https://sandbag-carbon-price-viewer.herokuapp.com")
+        .get("/_dash-layout")
+        .reply(200, sandbag.toString().replace(/85\.45/g, "99.80"));
     });
 
     and("Telegram API responds with updates", () => {
