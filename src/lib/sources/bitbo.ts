@@ -6,7 +6,7 @@ import { mediumCache } from "../cache";
 const extractPremium = (html: string): string => {
   const idx = html.indexOf("GBTC Premium");
   const match = html.slice(idx, idx + 90).match(/-\d{2}\.\d{2}/) ?? [];
-  if (match?.length > 0) return match[0];
+  if (match?.length > 0) return match[0] ?? "N/A";
 
   return "N/A";
 };
