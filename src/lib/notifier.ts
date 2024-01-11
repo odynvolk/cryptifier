@@ -5,7 +5,6 @@ import { getBitnodes } from "./sources/bitnodes";
 import { getCarbonEmissionsFuturesPrice } from "./sources/sandbag";
 import { getCbbi } from "./sources/cbbi";
 import { getFearGreedIndex } from "./sources/alternativeMe";
-import { getGrayscalePremium } from "./sources/bitbo";
 import { getTicker } from "./sources/coinGecko";
 import logger from "./logger";
 import notifyTelegram from "./notifiers/telegram";
@@ -52,8 +51,8 @@ const getAndNotify = async (ticker: string, increment: number) => {
   const priceChange = getPriceChange(ticker, price, increment);
   if (priceChange !== PriceChange.NO_CHANGE) {
     if (ticker === "bitcoin") {
-      const [cbbi, fgi, gp, bitnodes] = await Promise.all([getCbbi(), getFearGreedIndex(), getGrayscalePremium(), getBitnodes()]);
-      const text = `Bitcoin is <b>${priceChange}</b>: $${price}\nReachable nodes: ${bitnodes}\nF&GI: ${fgi}\nCBBI: ${cbbi}%\nGrayscale Premium: ${gp}%`;
+      const [cbbi, fgi, bitnodes] = await Promise.all([getCbbi(), getFearGreedIndex(), getBitnodes()]);
+      const text = `Bitcoin is <b>${priceChange}</b>: $${price}\nReachable nodes: ${bitnodes}\nF&GI: ${fgi}\nCBBI: ${cbbi}%`;
       return await notifyTelegram(ticker, text);
     }
 

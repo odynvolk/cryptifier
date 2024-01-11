@@ -14,7 +14,6 @@ import alternativeMe from "../data/alternativeMe.json";
 import bitnodes from "../data/bitnodes.json";
 import cbbi from "../data/cbbi.json";
 
-const bitbo = fs.readFileSync("./test/data/bitbo.html");
 const sandbag = fs.readFileSync("./test/data/sandbag.json");
 
 const notifier = rewire("../../src/lib/notifier");
@@ -47,12 +46,6 @@ Feature("Fetch and notify", () => {
       nock("https://api.alternative.me")
         .get("/fng/?limit=1&format=json")
         .reply(200, alternativeMe);
-    });
-
-    and("bitbo.io has data", () => {
-      nock("https://bitbo.io")
-        .get("/")
-        .reply(200, bitbo);
     });
 
     and("sandbag.be responds with data for carbon emissions futures", () => {

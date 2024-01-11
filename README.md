@@ -3,11 +3,10 @@
 Fetches...
 
 1. Price of crypto currencies from [https://www.coingecko.com/](https://colintalkscrypto.com/)
-2. Number of reacable Bitcoin nodes from [https://bitnodes.io/](https://bitnodes.io/)
+2. Number of reachable Bitcoin nodes from [https://bitnodes.io/](https://bitnodes.io/)
 3. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
 3. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
 4. Carbon Emissions Futures from [https://sandbag.be/](https://sandbag.be/)
-5. Grayscale Bitcoin Premium from [https://bitbo.io/](https://bitbo.io/)
 
 Notifies users of price going up or down in increments via...
 
