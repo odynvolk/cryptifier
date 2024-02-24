@@ -11,7 +11,7 @@ import notifyTelegram from "./notifiers/telegram";
 import { PriceChange } from "./common";
 
 const CURRENCIES = typeof config.currencies === "object" ? config.currencies : JSON.parse(config.currencies);
-const CARBON_EMISSIONS_FUTURES = typeof config.carbonEmissionsFutures === "object" ? config.carbonEmissionsFutures : JSON.parse(config.carbonEmissionsFutures);
+const CARBON_EMISSIONS_FUTURES = typeof config.carbonEmissionsFutures === "object" ? config.carbonEmissionsFutures : JSON.parse(config.carbonEmissionsFutures || "{}");
 
 const lastFloorPrices = CURRENCIES.reduce((acc: any, { ticker }: { ticker: string }) => {
   acc[ticker] = 0;
@@ -65,6 +65,8 @@ const getAndNotify = async (ticker: string, increment: number) => {
 };
 
 const getAndNotifyCef = async () => {
+  if (!CARBON_EMISSIONS_FUTURES.ticker) return false;
+
   const data = await getCarbonEmissionsFuturesPrice();
   if (!data) {
     return false;
