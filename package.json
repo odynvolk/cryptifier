@@ -28,13 +28,13 @@
     "trailingComma": "es5"
   },
   "dependencies": {
-    "axios": "^0.27.2",
-    "cheerio": "^1.0.0-rc.10",
-    "exp-config": "^4.1.0",
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "exp-config": "^4.2.1",
     "node-cache": "^5.1.2",
-    "nodemon": "^2.0.16",
-    "pino": "^7.11.0",
-    "split2": "^4.1.0"
+    "nodemon": "^3.1.9",
+    "pino": "^9.6.0",
+    "split2": "^4.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.10",
@@ -50,12 +50,12 @@
     "chronokinesis": "^3.1.2",
     "eslint": "^8.15.0",
     "mocha-cakes-2": "^3.3.0",
-    "moment": "^2.29.3",
-    "nock": "^13.2.4",
+    "moment": "^2.30.1",
+    "nock": "^13.5.6",
     "prettier": "^2.6.2",
-    "rewire": "^6.0.0",
+    "rewire": "^7.0.0",
     "ts-mocha": "^10.0.0",
-    "ts-node": "^10.7.0",
-    "typescript": "^4.6.4"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   }
 }
