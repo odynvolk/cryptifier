@@ -18,7 +18,10 @@ Prerequisites:
 
 - Node.js
 
-An easy way to setup Node is to use `nvm`. Then run `nvm use` to get the proper version specified in the project.
+An easy way to setup Node is to use either...
+
+1) [asdf](https://asdf-vm.com/) Then run `asdf install` to get the proper version specified in the project.
+2) [nvm](https://github.com/nvm-sh/nvm) Then run `nvm use` to get the proper version specified in the project.
 
 Then install the dependencies...
 
@@ -45,8 +48,8 @@ Useful commands:
 
 ## Testing
 
-Tests are written in a BDD/Cucumber type syntax using `mocha-cakes-2`. Try to write tests in a meaningful way as to 
-describe what it is you're testing and what resources are available. Testing does not only test a piece of code that it 
+Tests are written in a BDD/Cucumber type syntax using `mocha-cakes-2`. Try to write tests in a meaningful way as to
+describe what it is you're testing and what resources are available. Testing does not only test a piece of code that it
 actually works but is also used for documentation purposes. Focus on testing what is vital for the feature.
 
 To run all tests (including linting)...
