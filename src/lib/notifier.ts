@@ -1,43 +1,16 @@
 // @ts-ignore
 import config from "exp-config";
 
+import { CURRENCIES, CARBON_EMISSIONS_FUTURES } from "./config";
 import { getBitnodes } from "./sources/bitnodes";
 import { getCarbonEmissionsFuturesPrice } from "./sources/sandbag";
 import { getCbbi } from "./sources/cbbi";
-import { getFearGreedIndex } from "./sources/alternativeMe";
-import { getTicker } from "./sources/coinGecko";
+import { getFearGreedIndex } from "./sources/alternative-me";
+import getPriceChange from "./get-price-change";
+import { getTicker } from "./sources/coin-gecko";
 import logger from "./logger";
 import notifyTelegram from "./notifiers/telegram";
 import { PriceChange } from "./common";
-
-const CURRENCIES = typeof config.currencies === "object" ? config.currencies : JSON.parse(config.currencies);
-const CARBON_EMISSIONS_FUTURES = typeof config.carbonEmissionsFutures === "object" ? config.carbonEmissionsFutures : JSON.parse(config.carbonEmissionsFutures || "{}");
-
-const lastFloorPrices = CURRENCIES.reduce((acc: any, { ticker }: { ticker: string }) => {
-  acc[ticker] = 0;
-
-  return acc;
-}, { [CARBON_EMISSIONS_FUTURES.ticker]: 0 });
-
-const parseFloorPrice = (price: number, increment: number) => Math.floor((price / increment)) * increment;
-
-const getPriceChange = (ticker: string, price: number, increment: number) => {
-  if (!lastFloorPrices[ticker]) {
-    lastFloorPrices[ticker] = parseFloorPrice(price, increment);
-    return PriceChange.NO_CHANGE;
-  }
-
-  const currentFloorPrice = parseFloorPrice(price, increment);
-  if (currentFloorPrice < lastFloorPrices[ticker]) {
-    lastFloorPrices[ticker] = currentFloorPrice;
-    return PriceChange.DOWN;
-  } else if (currentFloorPrice > lastFloorPrices[ticker]) {
-    lastFloorPrices[ticker] = currentFloorPrice;
-    return PriceChange.UP;
-  }
-
-  return PriceChange.NO_CHANGE;
-};
 
 const toUpperCase = (ticker: string) => `${ticker.slice(0, 1).toUpperCase()}${ticker.slice(1)}`;
 
