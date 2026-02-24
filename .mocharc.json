@@ -1,8 +1,0 @@
-{
-  "timeout": 5000,
-  "reporter": "spec",
-  "recursive": true,
-  "ui": "mocha-cakes-2",
-  "exit": true,
-  "require": ["./test/setup.ts"]
-}
