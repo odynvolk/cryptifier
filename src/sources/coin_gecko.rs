@@ -1,4 +1,4 @@
-use crate::cache::LONG_CACHE;
+use crate::cache::SHORT_CACHE;
 use crate::logger;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
@@ -8,7 +8,7 @@ pub struct CoinPrice {
 
 pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, CoinPrice>> {
     let cache_key = format!("coin_gecko_{}", id);
-    let cached = LONG_CACHE.get(&cache_key);
+    let cached = SHORT_CACHE.get(&cache_key);
     if let Some(cached) = cached {
         if let Ok(data) = serde_json::from_str::<std::collections::HashMap<String, CoinPrice>>(&cached) {
             logger::debug(format!("Got ticker {} from CoinGecko (cached) ${}", id, data.get(id).and_then(|p| p.usd).unwrap_or(0.0)).as_str());
@@ -33,7 +33,7 @@ pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, Co
             match resp.json::<std::collections::HashMap<String, CoinPrice>>().await {
                 Ok(data) => {
                     let cached_value = serde_json::to_string(&data).ok()?;
-                    LONG_CACHE.set(&cache_key, cached_value);
+                    SHORT_CACHE.set(&cache_key, cached_value);
                     logger::debug(format!("Got ticker {} from CoinGecko ${}", id, data.get(id).and_then(|p| p.usd).unwrap_or(0.0)).as_str());
                     Some(data)
                 }
