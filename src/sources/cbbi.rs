@@ -15,17 +15,22 @@ const METRICS: &[&str] = &[
 ];
 
 fn calculate_average(data: &serde_json::Value) -> i64 {
-    let mut result: i64 = 0;
+    let mut result: f64 = 0.0;
+    let mut count = 0;
     for metric in METRICS.iter() {
-        if let Some(serde_json::Value::Array(metrics_array)) = data.get(metric) {
-            if let Some(last) = metrics_array.last() {
-                if let Some(val) = last.as_i64() {
+        if let Some(serde_json::Value::Object(metric_obj)) = data.get(metric) {
+            if let Some(last_value) = metric_obj.values().last() {
+                if let Some(val) = last_value.as_f64() {
                     result += val;
+                    count += 1;
                 }
             }
         }
     }
-    (result / METRICS.len() as i64) * 100
+
+    let average = if count > 0 { result / count as f64 } else { 0.0 };
+    let result = (average * 100.0) as i64;
+    result
 }
 
 pub async fn get_cbbi() -> i64 {
