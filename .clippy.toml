@@ -1,0 +1,75 @@
+# Clippy linting configuration
+
+# Maximum function length
+function-max-lines = 100
+
+# Maximum struct field count
+struct-field-excess = 5
+
+# Maximum match arms
+match-expr-blocks = true
+
+# Allow certain lints
+allow-unwrap-in-tests = true
+
+# Disallow unwrap in production code
+disallowed-types = []
+
+# Maximum cyclomatic complexity
+complexity-threshold = 25
+
+# Maximum cognitive complexity
+cognitive-complexity-threshold = 15
+
+# Allow shadowing
+allow-shadow = false
+
+# Allow unnecessary operations
+allow-unnecessary-wrappers = false
+
+# Allow print macros in tests only
+allow-print-in-tests = true
+
+# Allow unwrap in tests
+allow-unwrap-in-tests = true
+
+# Allowed errors
+allowed-errors = [
+    "Box<dyn std::error::Error>",
+    "std::io::Error",
+    "serde_json::Error",
+    "tokio::task::JoinError",
+]
+
+# Disallowed methods
+disallowed-methods = [
+    { path = "std::env::set_var", reason = "Use proper config management" },
+    { path = "std::env::var", reason = "Use config module instead" },
+]
+
+# Allowed types
+allowed-types = []
+
+# Allowed traits
+allowed-traits = []
+
+# Allowed lints
+allowed-lints = ["clippy::doc-markdown"]
+
+# Allowed items
+allowed-items = []
+
+# Allowed prefixes
+allowed-prefixes = ["as_", "is_", "has_", "should_"]
+
+# Allowed wildcard imports
+allowed-wildcard-imports = []
+
+# Allowed wildcard patterns
+allowed-wildcard-patterns = []
+
+# Allowed wildcard types
+allowed-wildcard-types = []
+
+# Allowed wildcard expressions
+allowed-wildcard-expressions = []

@@ -1,7 +1,9 @@
+//! Main entry point for the Cryptifier application.
 use cryptifier::logger;
 use cryptifier::notifier;
 
 fn main() {
+    // Load environment variables from .env file
     let env_path = std::env::current_dir().unwrap().join(".env");
 
     if let Ok(content) = std::fs::read_to_string(&env_path) {
@@ -17,9 +19,7 @@ fn main() {
     logger::init();
     logger::info("Cryptifier starting...");
 
-    tokio::runtime::Runtime::new()
-        .unwrap()
-        .block_on(async {
-            notifier::run().await;
-        });
+    tokio::runtime::Runtime::new().unwrap().block_on(async {
+        notifier::run().await;
+    });
 }

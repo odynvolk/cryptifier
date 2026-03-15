@@ -1,5 +1,5 @@
-use cryptifier::sources::coin_gecko::CoinPrice;
 use crate::helpers;
+use cryptifier::sources::coin_gecko::CoinPrice;
 
 pub struct MockClient;
 
