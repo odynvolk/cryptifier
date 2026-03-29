@@ -20,6 +20,16 @@ fn main() {
     logger::info("Cryptifier starting...");
 
     tokio::runtime::Runtime::new().unwrap().block_on(async {
-        notifier::run().await;
+        let ctrl_c = tokio::signal::ctrl_c();
+        tokio::select! {
+            _ = notifier::run() => {
+                logger::info("Notifier completed normally");
+            }
+            _ = ctrl_c => {
+                logger::info("Received SIGTERM (Ctrl+C), shutting down...");
+            }
+        }
     });
+
+    logger::info("Cryptifier stopped.");
 }
