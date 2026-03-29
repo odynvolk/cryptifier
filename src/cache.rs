@@ -1,3 +1,4 @@
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -8,6 +9,7 @@ struct CacheEntry<T> {
     expires_at: u64,
 }
 
+#[derive(Clone)]
 pub struct Cache<T: Clone + Send + Sync + 'static> {
     cache: Arc<RwLock<HashMap<String, CacheEntry<T>>>>,
     ttl_seconds: u64,
@@ -45,14 +47,12 @@ impl<T: Clone + Send + Sync + 'static> Cache<T> {
     }
 
     fn now() -> u64 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
+        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
     }
 }
 
-lazy_static::lazy_static! {
-    pub static ref SHORT_CACHE: Cache<String> = Cache::new(600); // 10 minutes
-    pub static ref LONG_CACHE: Cache<String> = Cache::new(43200); // 12 hours
-}
+/// Short-term cache with 10-minute TTL.
+pub static SHORT_CACHE: Lazy<Cache<String>> = Lazy::new(|| Cache::new(600));
+
+/// Long-term cache with 12-hour TTL.
+pub static LONG_CACHE: Lazy<Cache<String>> = Lazy::new(|| Cache::new(43200));

@@ -21,7 +21,10 @@ async fn test_get_fng_from_fixture() {
     let data_array = data.get("data").unwrap().as_array().unwrap();
     assert!(!data_array.is_empty());
     let first = &data_array[0];
-    assert_eq!(first.get("value_classification").unwrap().as_str(), Some("Extreme Fear"));
+    assert_eq!(
+        first.get("value_classification").unwrap().as_str(),
+        Some("Extreme Fear")
+    );
 }
 
 #[tokio::test]
@@ -32,6 +35,9 @@ async fn test_get_fng_fixture_values() {
     let first = &data_array[0];
 
     assert_eq!(first.get("value").unwrap().as_str(), Some("23"));
-    assert_eq!(first.get("value_classification").unwrap().as_str(), Some("Extreme Fear"));
+    assert_eq!(
+        first.get("value_classification").unwrap().as_str(),
+        Some("Extreme Fear")
+    );
     assert_eq!(first.get("timestamp").unwrap().as_str(), Some("1641772800"));
 }

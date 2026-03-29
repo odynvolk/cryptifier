@@ -1,3 +1,5 @@
+//! Application configuration management.
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -30,41 +32,41 @@ impl Default for AppConfig {
     }
 }
 
-lazy_static::lazy_static! {
-    pub static ref CONFIG: AppConfig = {
-        let currencies_str = env::var("APP__CURRENCIES").unwrap_or_else(|_| "[{\"ticker\": \"bitcoin\", \"increment\": 10}, {\"ticker\": \"ethereum\", \"increment\": 100}]".to_string());
-        let currencies: Vec<CurrencyConfig> = serde_json::from_str(&currencies_str)
-            .unwrap_or_else(|_| vec![
-                CurrencyConfig {
-                    ticker: "bitcoin".to_string(),
-                    increment: 1000,
-                },
-                CurrencyConfig {
-                    ticker: "ethereum".to_string(),
-                    increment: 100,
-                },
-            ]);
+/// Global application configuration.
+pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
+    let currencies_str = env::var("APP__CURRENCIES").unwrap_or_else(|_| {
+        "[{\"ticker\": \"bitcoin\", \"increment\": 10}, {\"ticker\": \"ethereum\", \"increment\": 100}]".to_string()
+    });
+    let currencies: Vec<CurrencyConfig> = serde_json::from_str(&currencies_str).unwrap_or_else(|_| {
+        vec![
+            CurrencyConfig {
+                ticker: "bitcoin".to_string(),
+                increment: 1000,
+            },
+            CurrencyConfig {
+                ticker: "ethereum".to_string(),
+                increment: 100,
+            },
+        ]
+    });
 
-        println!("{}", currencies_str);
-        AppConfig {
-            log_level: env::var("APP__LOG_LEVEL").ok(),
-            notifier_sleep: env::var("APP__NOTIFIER_SLEEP")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            telegram_api_key: env::var("APP__TELEGRAM_API_KEY").ok(),
-            telegram_chat_ids: env::var("APP__TELEGRAM_CHAT_IDS").ok(),
-            telegram_get_updates: env::var("APP__TELEGRAM_GET_UPDATES")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            currencies: Some(currencies),
-        }
-    };
-}
+    println!("{}", currencies_str);
+    AppConfig {
+        log_level: env::var("APP__LOG_LEVEL").ok(),
+        notifier_sleep: env::var("APP__NOTIFIER_SLEEP").ok().and_then(|s| s.parse().ok()),
+        telegram_api_key: env::var("APP__TELEGRAM_API_KEY").ok(),
+        telegram_chat_ids: env::var("APP__TELEGRAM_CHAT_IDS").ok(),
+        telegram_get_updates: env::var("APP__TELEGRAM_GET_UPDATES").ok().and_then(|s| s.parse().ok()),
+        currencies: Some(currencies),
+    }
+});
 
+/// Returns the list of currencies configured for monitoring.
 pub fn get_currencies() -> Vec<CurrencyConfig> {
     CONFIG.currencies.clone().unwrap_or_default()
 }
 
+/// Returns the notifier sleep interval in seconds.
 pub fn get_notifier_sleep() -> i64 {
     CONFIG.notifier_sleep.unwrap_or(300)
 }

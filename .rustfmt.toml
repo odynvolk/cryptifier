@@ -1,0 +1,35 @@
+# Rust code formatting configuration
+
+# Maximum line length
+max_width = 120
+
+# Number of spaces per tab
+hard_tabs = false
+
+# Tab width
+tab_spaces = 4
+
+# Use single line for short if/let statements
+single_line_if_else_max_width = 50
+
+# Reorder imports
+reorder_imports = true
+
+# Edition
+edition = "2021"
+
+# Force trailing semicolons
+merge_derives = true
+
+# Remove unnecessary parentheses
+remove_nested_parens = true
+
+# Match arm indentation
+match_arm_leading_pipes = "Never"
+
+# Use try expression
+use_try_shorthand = false
+
+# Width config
+struct_lit_width = 18
+struct_variant_width = 16

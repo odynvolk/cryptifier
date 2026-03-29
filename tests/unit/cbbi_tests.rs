@@ -54,8 +54,16 @@ async fn test_get_cbbi_fixture_structure() {
     for metric in METRICS.iter() {
         if let Some(serde_json::Value::Object(metric_obj)) = data.get(metric) {
             let keys: Vec<_> = metric_obj.keys().collect();
-            assert!(keys.iter().any(|k| *k == "1637971200"), "Missing timestamp in {}", metric);
-            assert!(keys.iter().any(|k| *k == "1638057600"), "Missing timestamp in {}", metric);
+            assert!(
+                keys.iter().any(|k| *k == "1637971200"),
+                "Missing timestamp in {}",
+                metric
+            );
+            assert!(
+                keys.iter().any(|k| *k == "1638057600"),
+                "Missing timestamp in {}",
+                metric
+            );
         }
     }
 }

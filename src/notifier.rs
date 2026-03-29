@@ -1,3 +1,4 @@
+//! Main notification orchestration and price monitoring loop.
 use crate::common::PriceChange;
 use crate::config::{get_currencies, get_notifier_sleep};
 use crate::get_price_change::get_price_change;
@@ -7,10 +8,10 @@ use crate::sources::alternative_me;
 use crate::sources::bitnodes;
 use crate::sources::cbbi;
 use crate::sources::coin_gecko;
-use std::pin::Pin;
 use std::future::Future;
+use std::pin::Pin;
 
-fn to_upper_case(ticker: &str) -> String {
+pub fn to_upper_case(ticker: &str) -> String {
     let mut chars = ticker.chars();
     match chars.next() {
         None => String::new(),
@@ -18,7 +19,7 @@ fn to_upper_case(ticker: &str) -> String {
     }
 }
 
-fn price_change_as_text(change: &PriceChange) -> String {
+pub fn price_change_as_text(change: &PriceChange) -> String {
     match change {
         PriceChange::Up => "up".to_string(),
         PriceChange::Down => "down".to_string(),
@@ -55,7 +56,12 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
                 }
 
                 let upper_case_ticker = to_upper_case(ticker);
-                let text = format!("{} is <b>{}</b>! ${}", upper_case_ticker, price_change_as_text(&price_change), display_price);
+                let text = format!(
+                    "{} is <b>{}</b>! ${}",
+                    upper_case_ticker,
+                    price_change_as_text(&price_change),
+                    display_price
+                );
                 return telegram::notify(ticker, &text).await;
             }
         }
@@ -64,8 +70,10 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
     false
 }
 
+/// Type alias for notification futures.
 type NotifyFuture = Pin<Box<dyn Future<Output = bool> + Send>>;
 
+/// Runs a single iteration of price checking for all configured currencies.
 async fn run_once() -> Vec<bool> {
     let currencies = get_currencies();
     let mut futures = Vec::new();
@@ -85,9 +93,10 @@ async fn run_once() -> Vec<bool> {
     results
 }
 
+/// Main entry point for the notification service.
 pub async fn run() {
     let currencies = get_currencies();
-    logger::info(format!("{} currencies defined.", currencies.len()).as_str());
+    logger::info(&format!("{} currencies defined.", currencies.len()));
 
     let sleep_seconds = get_notifier_sleep() as u64;
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(sleep_seconds));

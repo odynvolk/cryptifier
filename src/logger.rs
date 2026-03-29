@@ -1,3 +1,4 @@
+//! Logging configuration and utilities.
 use tracing_subscriber::{fmt, prelude::*};
 
 pub fn init() {
