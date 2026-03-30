@@ -21,9 +21,9 @@ pub fn to_upper_case(ticker: &str) -> String {
 
 pub fn price_change_as_text(change: &PriceChange) -> String {
     match change {
-        PriceChange::Up => "up".to_string(),
-        PriceChange::Down => "down".to_string(),
-        PriceChange::NoChange => "no change".to_string(),
+        PriceChange::Up => "🟢 <b>up</b>".to_string(),
+        PriceChange::Down => "🔴 <b>down</b>".to_string(),
+        PriceChange::NoChange => "🟡 no change".to_string(),
     }
 }
 
@@ -33,7 +33,7 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
         logger::debug(&format!("Quiet mode: skipping notification for {}", ticker));
         return false;
     }
-    
+
     let data = coin_gecko::get_ticker(ticker).await;
 
     if let Some(data) = data {
@@ -51,7 +51,7 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
                     );
 
                     let text = format!(
-                        "Bitcoin is <b>{}</b>: ${}\nReachable nodes: {}\nF&GI: {}\nCBBI: {}%",
+                        "🟠 <b>Bitcoin</b> is {}! ${}\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
                         price_change_as_text(&price_change),
                         display_price,
                         bitnodes,
@@ -63,7 +63,7 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
 
                 let upper_case_ticker = to_upper_case(ticker);
                 let text = format!(
-                    "{} is <b>{}</b>! ${}",
+                    "💰 <b>{}</b> is {}! ${}",
                     upper_case_ticker,
                     price_change_as_text(&price_change),
                     display_price
@@ -103,7 +103,7 @@ async fn run_once() -> Vec<bool> {
 pub async fn run() {
     let currencies = get_currencies();
     logger::info(&format!("{} currencies defined.", currencies.len()));
-    
+
     if is_quiet_mode_enabled() {
         let start = crate::config::get_quiet_mode_start_hour();
         let end = crate::config::get_quiet_mode_end_hour();
