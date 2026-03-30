@@ -1,6 +1,6 @@
 //! Main notification orchestration and price monitoring loop.
 use crate::common::PriceChange;
-use crate::config::{get_currencies, get_notifier_sleep};
+use crate::config::{get_currencies, get_notifier_sleep, is_quiet_hours, is_quiet_mode_enabled};
 use crate::get_price_change::get_price_change;
 use crate::logger;
 use crate::notifiers::telegram;
@@ -28,6 +28,12 @@ pub fn price_change_as_text(change: &PriceChange) -> String {
 }
 
 async fn get_and_notify(ticker: &str, increment: i64) -> bool {
+    // Check if we're in quiet mode
+    if is_quiet_mode_enabled() && is_quiet_hours() {
+        logger::debug(&format!("Quiet mode: skipping notification for {}", ticker));
+        return false;
+    }
+    
     let data = coin_gecko::get_ticker(ticker).await;
 
     if let Some(data) = data {
@@ -97,6 +103,12 @@ async fn run_once() -> Vec<bool> {
 pub async fn run() {
     let currencies = get_currencies();
     logger::info(&format!("{} currencies defined.", currencies.len()));
+    
+    if is_quiet_mode_enabled() {
+        let start = crate::config::get_quiet_mode_start_hour();
+        let end = crate::config::get_quiet_mode_end_hour();
+        logger::info(&format!("Quiet mode enabled: {}00 - {}00", start, end));
+    }
 
     let sleep_seconds = get_notifier_sleep() as u64;
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(sleep_seconds));
