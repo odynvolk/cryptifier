@@ -16,6 +16,7 @@ async fn test_get_ticker_fixture_bitcoin() {
     let data = result.unwrap();
     let bitcoin_price = data.get("bitcoin").unwrap();
     assert_eq!(bitcoin_price.usd, Some(66674.0));
+    assert_eq!(bitcoin_price.usd_24h_vol, Some(40491426905.024155));
 }
 
 #[tokio::test]

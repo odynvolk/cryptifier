@@ -6,6 +6,7 @@ use crate::logger;
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct CoinPrice {
     pub usd: Option<f64>,
+    pub usd_24h_vol: Option<f64>,
 }
 
 /// Fetches the current price of a cryptocurrency from CoinGecko.
@@ -30,7 +31,7 @@ pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, Co
 
     match client
         .get(format!(
-            "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd",
+            "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd&include_24hr_vol=true",
             id
         ))
         .header("content-type", "application/json")

@@ -39,6 +39,7 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
     if let Some(data) = data {
         if let Some(crypto_currency) = data.get(ticker) {
             let price = crypto_currency.usd.unwrap_or(0.0);
+            let vol_24h = crypto_currency.usd_24h_vol.unwrap_or(0.0) / 1_000_000_000.0;
             let price_change = get_price_change(ticker, price, increment);
 
             if price_change != PriceChange::NoChange {
@@ -51,9 +52,10 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
                     );
 
                     let text = format!(
-                        "🟠 <b>Bitcoin</b> is {}! ${}\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
+                        "🟠 <b>Bitcoin</b> is {}! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
                         price_change_as_text(&price_change),
                         display_price,
+                        vol_24h,
                         bitnodes,
                         fgi,
                         cbbi
