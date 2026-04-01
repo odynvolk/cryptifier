@@ -31,7 +31,7 @@ Create a .env file with values needed in your setup.
 ```
 APP__LOG_LEVEL=debug
 APP__NOTIFIER_SLEEP=300
-APP__CURRENCIES=[{"ticker": "bitcoin","increment": 3000}]
+APP__CURRENCIES=[{"ticker": "bitcoin","percentage_threshold": 2.0}, {"ticker": "ethereum","percentage_threshold": 2.0}]
 APP__TELEGRAM_API_KEY=<key>
 APP__TELEGRAM_CHAT_IDS=<id>
 APP__TELEGRAM_GET_UPDATES=false

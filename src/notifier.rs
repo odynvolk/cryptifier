@@ -27,7 +27,7 @@ pub fn price_change_as_text(change: &PriceChange) -> String {
     }
 }
 
-async fn get_and_notify(ticker: &str, increment: i64) -> bool {
+async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
     // Check if we're in quiet mode
     if is_quiet_mode_enabled() && is_quiet_hours() {
         logger::debug(&format!("Quiet mode: skipping notification for {}", ticker));
@@ -40,7 +40,7 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
         if let Some(crypto_currency) = data.get(ticker) {
             let price = crypto_currency.usd.unwrap_or(0.0);
             let vol_24h = crypto_currency.usd_24h_vol.unwrap_or(0.0) / 1_000_000_000.0;
-            let price_change = get_price_change(ticker, price, increment);
+            let price_change = get_price_change(ticker, price, percentage_threshold);
 
             if price_change != PriceChange::NoChange {
                 let display_price = price;
@@ -88,8 +88,8 @@ async fn run_once() -> Vec<bool> {
 
     for currency in currencies.iter() {
         let ticker = currency.ticker.clone();
-        let increment = currency.increment;
-        let future: NotifyFuture = Box::pin(async move { get_and_notify(&ticker, increment).await });
+        let percentage_threshold = currency.percentage_threshold;
+        let future: NotifyFuture = Box::pin(async move { get_and_notify(&ticker, percentage_threshold).await });
         futures.push(future);
     }
 

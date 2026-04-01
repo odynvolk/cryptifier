@@ -14,40 +14,33 @@ static LAST_FLOOR_PRICES: Lazy<Mutex<HashMap<String, f64>>> = Lazy::new(|| {
     Mutex::new(prices)
 });
 
-/// Rounds a price down to the nearest thousand.
-pub fn parse_floor_price(price: f64) -> f64 {
-    (price / 1000.0).floor() * 1000.0
-}
+/// Detects if a cryptocurrency price has changed by a significant percentage.
+pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> PriceChange {
+    let mut last_prices = LAST_FLOOR_PRICES.lock().unwrap();
 
-/// Detects if a cryptocurrency price has changed by a significant amount.
-pub fn get_price_change(ticker: &str, price: f64, increment: i64) -> PriceChange {
-    let current_floor_price = parse_floor_price(price);
-
-    let mut last_floor_prices = LAST_FLOOR_PRICES.lock().unwrap();
-    if !last_floor_prices.contains_key(ticker) {
-        last_floor_prices.insert(ticker.to_string(), current_floor_price);
+    if !last_prices.contains_key(ticker) {
+        last_prices.insert(ticker.to_string(), price);
         return PriceChange::NoChange;
     }
 
-    let last_price = *last_floor_prices.get(ticker).unwrap();
-    last_floor_prices.insert(ticker.to_string(), current_floor_price);
+    let last_price = *last_prices.get(ticker).unwrap();
+    last_prices.insert(ticker.to_string(), price);
 
-    if last_floor_price_diff(last_price, current_floor_price) > increment as f64 {
-        if current_floor_price < last_price {
+    // Calculate percentage change
+    let percent_change = if last_price > 0.0 {
+        ((price - last_price) / last_price) * 100.0
+    } else {
+        0.0
+    };
+
+    // Check if percentage change exceeds threshold (absolute value)
+    if percent_change.abs() > percentage_threshold {
+        if percent_change < 0.0 {
             return PriceChange::Down;
-        } else if current_floor_price > last_price {
+        } else if percent_change > 0.0 {
             return PriceChange::Up;
         }
     }
 
     PriceChange::NoChange
-}
-
-/// Calculates the absolute difference between two floor prices.
-fn last_floor_price_diff(last: f64, current: f64) -> f64 {
-    if last > current {
-        last - current
-    } else {
-        current - last
-    }
 }
