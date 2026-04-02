@@ -7,7 +7,7 @@ Fetches...
 3. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
 3. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
 
-Notifies users of price going up or down in increments via...
+Notifies users of price going up or down in percentages via...
 
 1. Telegram via a TelegramBot
 
@@ -31,10 +31,13 @@ Create a .env file with values needed in your setup.
 ```
 APP__LOG_LEVEL=debug
 APP__NOTIFIER_SLEEP=300
-APP__CURRENCIES=[{"ticker": "bitcoin","increment": 3000}]
+APP__CURRENCIES=[{"ticker": "bitcoin","percentage_threshold": 2.0}, {"ticker": "ethereum","percentage_threshold": 2.0}]
 APP__TELEGRAM_API_KEY=<key>
 APP__TELEGRAM_CHAT_IDS=<id>
 APP__TELEGRAM_GET_UPDATES=false
+APP__QUIET_MODE_ENABLED=true
+APP__QUIET_MODE_START_HOUR=0
+APP__QUIET_MODE_END_HOUR=6
 ```
 
 ## Running Tests

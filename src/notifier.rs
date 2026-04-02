@@ -27,7 +27,7 @@ pub fn price_change_as_text(change: &PriceChange) -> String {
     }
 }
 
-async fn get_and_notify(ticker: &str, increment: i64) -> bool {
+async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
     // Check if we're in quiet mode
     if is_quiet_mode_enabled() && is_quiet_hours() {
         logger::debug(&format!("Quiet mode: skipping notification for {}", ticker));
@@ -40,7 +40,7 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
         if let Some(crypto_currency) = data.get(ticker) {
             let price = crypto_currency.usd.unwrap_or(0.0);
             let vol_24h = crypto_currency.usd_24h_vol.unwrap_or(0.0) / 1_000_000_000.0;
-            let price_change = get_price_change(ticker, price, increment);
+            let price_change = get_price_change(ticker, price, percentage_threshold);
 
             if price_change != PriceChange::NoChange {
                 let display_price = price;
@@ -52,22 +52,24 @@ async fn get_and_notify(ticker: &str, increment: i64) -> bool {
                     );
 
                     let text = format!(
-                        "🟠 <b>Bitcoin</b> is {}! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
+                        "🟠 <b>Bitcoin</b> is {} {}%! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
                         price_change_as_text(&price_change),
+                        percentage_threshold,
                         display_price,
                         vol_24h,
                         bitnodes,
                         fgi,
-                        cbbi
+                        cbbi,
                     );
                     return telegram::notify(ticker, &text).await;
                 }
 
                 let upper_case_ticker = to_upper_case(ticker);
                 let text = format!(
-                    "💰 <b>{}</b> is {}! ${}",
+                    "💰 <b>{}</b> is {} {}%! ${}",
                     upper_case_ticker,
                     price_change_as_text(&price_change),
+                    percentage_threshold,
                     display_price
                 );
                 return telegram::notify(ticker, &text).await;
@@ -88,8 +90,8 @@ async fn run_once() -> Vec<bool> {
 
     for currency in currencies.iter() {
         let ticker = currency.ticker.clone();
-        let increment = currency.increment;
-        let future: NotifyFuture = Box::pin(async move { get_and_notify(&ticker, increment).await });
+        let percentage_threshold = currency.percentage_threshold;
+        let future: NotifyFuture = Box::pin(async move { get_and_notify(&ticker, percentage_threshold).await });
         futures.push(future);
     }
 
@@ -109,7 +111,7 @@ pub async fn run() {
     if is_quiet_mode_enabled() {
         let start = crate::config::get_quiet_mode_start_hour();
         let end = crate::config::get_quiet_mode_end_hour();
-        logger::info(&format!("Quiet mode enabled: {}00 - {}00", start, end));
+        logger::info(&format!("Quiet mode enabled: {} - {}", start, end));
     }
 
     let sleep_seconds = get_notifier_sleep() as u64;
