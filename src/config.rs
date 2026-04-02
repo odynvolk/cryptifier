@@ -43,7 +43,7 @@ impl Default for AppConfig {
 /// Global application configuration.
 pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
     let currencies_str = env::var("APP__CURRENCIES").unwrap_or_else(|_| {
-        "[{\"ticker\": \"bitcoin\", \"increment\": 10}, {\"ticker\": \"ethereum\", \"increment\": 100}]".to_string()
+        "[{\"ticker\": \"bitcoin\", \"percentage_threshold\": 2.0}, {\"ticker\": \"ethereum\", \"percentage_threshold\": 2.0}]".to_string()
     });
     let quiet_mode_enabled_str = env::var("APP__QUIET_MODE_ENABLED").unwrap_or_else(|_| "false".to_string());
     let quiet_mode_start_hour_str = env::var("APP__QUIET_MODE_START_HOUR").unwrap_or_else(|_| "0".to_string());
@@ -112,12 +112,12 @@ pub fn get_quiet_mode_end_hour() -> i64 {
 /// Check if current time is within quiet mode hours.
 pub fn is_quiet_hours() -> bool {
     use chrono::{Local, Timelike};
-    
+
     let now = Local::now();
     let current_hour = now.hour() as u64;
     let start_hour = get_quiet_mode_start_hour() as u64;
     let end_hour = get_quiet_mode_end_hour() as u64;
-    
+
     if start_hour < end_hour {
         // Normal case: e.g., 00:00 to 06:00
         current_hour >= start_hour && current_hour < end_hour

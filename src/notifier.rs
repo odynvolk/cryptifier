@@ -52,22 +52,24 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
                     );
 
                     let text = format!(
-                        "🟠 <b>Bitcoin</b> is {}! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
+                        "🟠 <b>Bitcoin</b> is {} {}%! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
                         price_change_as_text(&price_change),
+                        percentage_threshold,
                         display_price,
                         vol_24h,
                         bitnodes,
                         fgi,
-                        cbbi
+                        cbbi,
                     );
                     return telegram::notify(ticker, &text).await;
                 }
 
                 let upper_case_ticker = to_upper_case(ticker);
                 let text = format!(
-                    "💰 <b>{}</b> is {}! ${}",
+                    "💰 <b>{}</b> is {} {}%! ${}",
                     upper_case_ticker,
                     price_change_as_text(&price_change),
+                    percentage_threshold,
                     display_price
                 );
                 return telegram::notify(ticker, &text).await;
@@ -109,7 +111,7 @@ pub async fn run() {
     if is_quiet_mode_enabled() {
         let start = crate::config::get_quiet_mode_start_hour();
         let end = crate::config::get_quiet_mode_end_hour();
-        logger::info(&format!("Quiet mode enabled: {}00 - {}00", start, end));
+        logger::info(&format!("Quiet mode enabled: {} - {}", start, end));
     }
 
     let sleep_seconds = get_notifier_sleep() as u64;
