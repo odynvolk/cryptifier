@@ -1,69 +1,78 @@
+//! Tests for ColinTalksCrypto Bitcoin Bull/Bear Index (CBBI) API integration
+
 use crate::helpers;
+use cryptifier::sources::cbbi::{calculate_average, parse_response};
 
-const METRICS: &[&str] = &[
-    "PiCycle",
-    "RUPL",
-    "RHODL",
-    "Puell",
-    "2YMA",
-    "Trolololo",
-    "MVRV",
-    "ReserveRisk",
-    "Woobull",
-    "Confidence",
-];
+#[tokio::test]
+async fn test_parse_response_with_valid_data() {
+    let data = helpers::load_fixture("cbbi");
 
-fn calculate_average_from_fixture(data: &serde_json::Value) -> i64 {
-    let mut result: f64 = 0.0;
-    for metric in METRICS.iter() {
-        if let Some(serde_json::Value::Object(metric_obj)) = data.get(metric) {
-            // Get the last timestamp value
-            if let Some(last_value) = metric_obj.values().last() {
-                if let Some(val) = last_value.as_f64() {
-                    result += val;
-                }
-            }
-        }
-    }
-    ((result / METRICS.len() as f64) * 100.0) as i64
-}
+    let result = parse_response(data);
 
-pub struct MockClient;
-
-impl MockClient {
-    pub async fn get_cbbi_fixture() -> i64 {
-        let data = helpers::get_cbbi_fixture();
-        calculate_average_from_fixture(&data)
-    }
+    assert!(result.is_some());
+    let parsed = result.unwrap();
+    assert_eq!(parsed.index_value, 56);
 }
 
 #[tokio::test]
-async fn test_get_cbbi_from_fixture() {
-    let result = MockClient::get_cbbi_fixture().await;
+async fn test_parse_response_with_empty_data() {
+    let empty_data: serde_json::Value = serde_json::json!({});
+    let result = parse_response(empty_data);
+
+    assert!(result.is_some());
+    let parsed = result.unwrap();
+    assert_eq!(parsed.index_value, 0);
+}
+
+#[tokio::test]
+async fn test_parse_response_with_partial_data() {
+    let partial_data: serde_json::Value = serde_json::json!({
+        "PiCycle": {
+            "1637971200": 0.5317,
+            "1638057600": 0.531
+        }
+    });
+    let result = parse_response(partial_data);
+
+    assert!(result.is_some());
+    let parsed = result.unwrap();
+    // Only one metric, so average should be around 53
+    assert!(parsed.index_value > 50 && parsed.index_value < 60);
+}
+
+#[test]
+fn test_calculate_average_with_full_data() {
+    let data = helpers::load_fixture("cbbi");
+    let result = calculate_average(&data);
     assert_eq!(result, 56);
 }
 
-#[tokio::test]
-async fn test_get_cbbi_fixture_structure() {
-    let data = helpers::get_cbbi_fixture();
+#[test]
+fn test_calculate_average_with_empty_data() {
+    let data: serde_json::Value = serde_json::json!({});
+    let result = calculate_average(&data);
+    assert_eq!(result, 0);
+}
 
-    for metric in METRICS.iter() {
-        assert!(data.get(metric).is_some(), "Missing metric: {}", metric);
-    }
-
-    for metric in METRICS.iter() {
-        if let Some(serde_json::Value::Object(metric_obj)) = data.get(metric) {
-            let keys: Vec<_> = metric_obj.keys().collect();
-            assert!(
-                keys.iter().any(|k| *k == "1637971200"),
-                "Missing timestamp in {}",
-                metric
-            );
-            assert!(
-                keys.iter().any(|k| *k == "1638057600"),
-                "Missing timestamp in {}",
-                metric
-            );
+#[test]
+fn test_calculate_average_with_single_metric() {
+    let data: serde_json::Value = serde_json::json!({
+        "PiCycle": {
+            "1637971200": 0.5317,
+            "1638057600": 0.531
         }
-    }
+    });
+    let result = calculate_average(&data);
+    // 0.53135 * 100 = 53.135, rounded to 53
+    assert_eq!(result, 53);
+}
+
+#[test]
+fn test_calculate_average_with_no_values() {
+    let data: serde_json::Value = serde_json::json!({
+        "PiCycle": {},
+        "RUPL": {}
+    });
+    let result = calculate_average(&data);
+    assert_eq!(result, 0);
 }

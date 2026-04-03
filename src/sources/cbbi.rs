@@ -16,8 +16,14 @@ const METRICS: &[&str] = &[
     "Confidence",
 ];
 
+/// Struct to hold parsed CBBI data
+#[derive(Debug, Clone)]
+pub struct CbbiData {
+    pub index_value: i64,
+}
+
 /// Calculates the average of all available metrics from the CBBI data.
-fn calculate_average(data: &serde_json::Value) -> i64 {
+pub fn calculate_average(data: &serde_json::Value) -> i64 {
     let mut result: f64 = 0.0;
     let mut count = 0;
     for metric in METRICS.iter() {
@@ -36,8 +42,7 @@ fn calculate_average(data: &serde_json::Value) -> i64 {
     } else {
         0.0
     };
-    let result = (average * 100.0) as i64;
-    result
+    (average * 100.0) as i64
 }
 
 /// Fetches the current Bitcoin Bull/Bear Index (CBBI) from ColinTalksCrypto.
@@ -47,25 +52,16 @@ pub async fn get_cbbi() -> i64 {
         return value.parse::<i64>().unwrap_or(-1);
     }
 
-    let client = reqwest::Client::new();
-
-    match client
-        .get("https://colintalkscrypto.com/cbbi/data/latest.json")
-        .header("User-Agent", "Cryptifier/1.0")
-        .header("content-type", "application/json")
-        .timeout(std::time::Duration::from_secs(10))
-        .send()
-        .await
-    {
-        Ok(resp) => match resp.json::<serde_json::Value>().await {
-            Ok(data) => {
-                let result = calculate_average(&data);
+    match fetch_cbbi().await {
+        Ok(data) => match parse_response(data) {
+            Some(parsed) => {
+                let result = parsed.index_value;
                 LONG_CACHE.set("cbbi", result.to_string());
                 logger::debug(format!("Got CBBI from colintalkscrypto.com {}%", result).as_str());
                 result
             }
-            Err(e) => {
-                logger::error(format!("Failed to parse CBBI response: {}", e).as_str());
+            None => {
+                logger::error("Failed to parse CBBI response");
                 -1
             }
         },
@@ -74,4 +70,25 @@ pub async fn get_cbbi() -> i64 {
             -1
         }
     }
+}
+
+/// Fetches raw JSON response from the CBBI API.
+pub async fn fetch_cbbi() -> Result<serde_json::Value, reqwest::Error> {
+    let client = reqwest::Client::new();
+
+    let resp = client
+        .get("https://colintalkscrypto.com/cbbi/data/latest.json")
+        .header("User-Agent", "Cryptifier/1.0")
+        .header("content-type", "application/json")
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await?;
+
+    resp.json().await
+}
+
+/// Parses the raw JSON response into structured CBBI data.
+pub fn parse_response(data: serde_json::Value) -> Option<CbbiData> {
+    let index_value = calculate_average(&data);
+    Some(CbbiData { index_value })
 }

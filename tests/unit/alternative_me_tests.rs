@@ -1,43 +1,33 @@
 //! Tests for Alternative.me Fear & Greed Index API integration
 
 use crate::helpers;
+use cryptifier::sources::alternative_me::{format_result, parse_response, FearGreedData};
 
-/// Mock client for testing
-pub struct MockClient;
+#[tokio::test]
+async fn test_parse_response_with_valid_data() {
+    let data = helpers::load_fixture("alternative-me");
 
-impl MockClient {
-    pub async fn get_fng_fixture() -> String {
-        let data = helpers::get_fng_fixture();
-        serde_json::to_string(&data).unwrap()
-    }
+    let result = parse_response(data);
+
+    assert!(result.is_some());
+    let parsed = result.unwrap();
+    assert_eq!(parsed.value_classification, "Extreme Fear");
+    assert_eq!(parsed.value_num, 23);
 }
 
 #[tokio::test]
-async fn test_get_fng_from_fixture() {
-    let json_response = MockClient::get_fng_fixture().await;
-    let data: serde_json::Value = serde_json::from_str(&json_response).unwrap();
-
-    assert!(data.get("data").is_some());
-    let data_array = data.get("data").unwrap().as_array().unwrap();
-    assert!(!data_array.is_empty());
-    let first = &data_array[0];
-    assert_eq!(
-        first.get("value_classification").unwrap().as_str(),
-        Some("Extreme Fear")
-    );
+async fn test_parse_response_with_empty_data() {
+    let empty_data: serde_json::Value = serde_json::json!({ "data": [] });
+    let result = parse_response(empty_data);
+    assert!(result.is_none());
 }
 
-#[tokio::test]
-async fn test_get_fng_fixture_values() {
-    let json_response = MockClient::get_fng_fixture().await;
-    let data: serde_json::Value = serde_json::from_str(&json_response).unwrap();
-    let data_array = data.get("data").unwrap().as_array().unwrap();
-    let first = &data_array[0];
-
-    assert_eq!(first.get("value").unwrap().as_str(), Some("23"));
-    assert_eq!(
-        first.get("value_classification").unwrap().as_str(),
-        Some("Extreme Fear")
-    );
-    assert_eq!(first.get("timestamp").unwrap().as_str(), Some("1641772800"));
+#[test]
+fn test_format_result() {
+    let data = FearGreedData {
+        value_classification: "Extreme Fear".to_string(),
+        value_num: 23,
+    };
+    let result = format_result(data);
+    assert_eq!(result, "\"Extreme Fear\" | 23");
 }
