@@ -1,6 +1,7 @@
 //! Price change detection logic.
 use crate::common::PriceChange;
 use crate::config::get_currencies;
+use crate::logger;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -32,6 +33,15 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
     } else {
         0.0
     };
+
+    logger::debug(
+        format!(
+            "The price percentage change is {} and the threshold is {}",
+            percent_change.abs(),
+            percentage_threshold
+        )
+        .as_str(),
+    );
 
     // Check if percentage change exceeds threshold (absolute value)
     if percent_change.abs() > percentage_threshold {

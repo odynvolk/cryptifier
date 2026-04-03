@@ -27,9 +27,33 @@ pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, Co
         }
     }
 
+    match fetch_ticker(id).await {
+        Ok(data) => {
+            if let Some(cached_value) = serde_json::to_string(&data).ok() {
+                SHORT_CACHE.set(&cache_key, cached_value);
+            }
+            logger::debug(
+                format!(
+                    "Got ticker {} from CoinGecko ${}",
+                    id,
+                    data.get(id).and_then(|p| p.usd).unwrap_or(0.0)
+                )
+                .as_str(),
+            );
+            Some(data)
+        }
+        Err(e) => {
+            logger::error(format!("Failed to get ticker {} from CoinGecko: {}", id, e).as_str());
+            None
+        }
+    }
+}
+
+/// Fetches raw JSON response from the CoinGecko API.
+pub async fn fetch_ticker(id: &str) -> Result<std::collections::HashMap<String, CoinPrice>, reqwest::Error> {
     let client = reqwest::Client::new();
 
-    match client
+    let resp = client
         .get(format!(
             "https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd&include_24hr_vol=true",
             id
@@ -38,30 +62,7 @@ pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, Co
         .header("User-Agent", "Cryptifier/1.0")
         .timeout(std::time::Duration::from_secs(5))
         .send()
-        .await
-    {
-        Ok(resp) => match resp.json::<std::collections::HashMap<String, CoinPrice>>().await {
-            Ok(data) => {
-                let cached_value = serde_json::to_string(&data).ok()?;
-                SHORT_CACHE.set(&cache_key, cached_value);
-                logger::debug(
-                    format!(
-                        "Got ticker {} from CoinGecko ${}",
-                        id,
-                        data.get(id).and_then(|p| p.usd).unwrap_or(0.0)
-                    )
-                    .as_str(),
-                );
-                Some(data)
-            }
-            Err(e) => {
-                logger::error(format!("Failed to get ticker {} due to CoinGecko response: {}", id, e).as_str());
-                None
-            }
-        },
-        Err(e) => {
-            logger::error(format!("Failed to get ticker {} from CoinGecko: {}", id, e).as_str());
-            None
-        }
-    }
+        .await?;
+
+    resp.json().await
 }

@@ -2,47 +2,65 @@
 use crate::cache::LONG_CACHE;
 use crate::logger;
 
+/// Struct to hold parsed Bitnodes data
+#[derive(Debug, Clone)]
+pub struct BitnodesData {
+    pub total_nodes: i64,
+}
+
 /// Fetches the current number of reachable Bitcoin nodes from Bitnodes.io.
 pub async fn get_bitnodes() -> String {
     let value = LONG_CACHE.get("bitnodes");
     if let Some(value) = value {
-        return value;
+        return value.clone();
     }
 
+    match fetch_bitnodes().await {
+        Ok(data) => match parse_response(data) {
+            Some(parsed) => {
+                let result = format_result(parsed);
+                LONG_CACHE.set("bitnodes", result.clone());
+                logger::debug(format!("Got nodes from bitnodes.io {}", result).as_str());
+                result
+            }
+            None => {
+                logger::error("Failed to parse bitnodes response");
+                "N/A".to_string()
+            }
+        },
+        Err(e) => {
+            logger::error(format!("Failed to get nodes from bitnodes.io: {}", e).as_str());
+            "N/A".to_string()
+        }
+    }
+}
+
+/// Fetches raw JSON response from the Bitnodes.io API.
+pub async fn fetch_bitnodes() -> Result<serde_json::Value, reqwest::Error> {
     let client = reqwest::Client::new();
 
-    match client
+    let resp = client
         .get("https://bitnodes.io/api/v1/snapshots/?limit=1")
         .header("User-Agent", "Cryptifier/1.0")
         .header("content-type", "application/json")
         .timeout(std::time::Duration::from_secs(10))
         .send()
-        .await
-    {
-        Ok(resp) => match resp.json::<serde_json::Value>().await {
-            Ok(data) => {
-                if let Some(serde_json::Value::Array(results_array)) = data.get("results") {
-                    if let Some(first) = results_array.first() {
-                        if let Some(total_nodes) = first.get("total_nodes") {
-                            if let Some(nodes) = total_nodes.as_i64() {
-                                let nodes_str = nodes.to_string();
-                                LONG_CACHE.set("bitnodes", nodes_str.clone());
-                                logger::debug(format!("Got reachable nodes from bitnodes.io {}", nodes).as_str());
-                                return nodes_str;
-                            }
-                        }
-                    }
-                }
-                "N/A".to_string()
-            }
-            Err(e) => {
-                logger::error(format!("Failed to parse bitnodes response: {}", e).as_str());
-                "N/A".to_string()
-            }
-        },
-        Err(e) => {
-            logger::error(format!("Failed to get reachable nodes from bitnodes.io: {}", e).as_str());
-            "N/A".to_string()
-        }
-    }
+        .await?;
+
+    resp.json().await
+}
+
+/// Parses the raw JSON response into structured Bitnodes data.
+pub fn parse_response(data: serde_json::Value) -> Option<BitnodesData> {
+    let results_array = data.get("results")?.as_array()?;
+    let first = results_array.first()?;
+
+    let total_nodes = first.get("total_nodes").and_then(|v| v.as_i64()).unwrap_or(0);
+
+    Some(BitnodesData { total_nodes })
+}
+
+/// Formats the parsed Bitnodes data into a user-friendly string.
+pub fn format_result(data: BitnodesData) -> String {
+    data.total_nodes.to_string()
 }

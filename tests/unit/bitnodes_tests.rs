@@ -1,45 +1,29 @@
 //! Tests for Bitnodes.io API integration
 
 use crate::helpers;
+use cryptifier::sources::bitnodes::{format_result, parse_response, BitnodesData};
 
-/// Mock client for testing
-pub struct MockClient;
+#[tokio::test]
+async fn test_parse_response_with_valid_data() {
+    let data = helpers::load_fixture("bitnodes");
 
-impl MockClient {
-    pub async fn get_bitnodes_fixture() -> String {
-        let data = helpers::get_bitnodes_fixture();
+    let result = parse_response(data);
 
-        if let Some(serde_json::Value::Array(results_array)) = data.get("results") {
-            if let Some(first) = results_array.first() {
-                if let Some(total_nodes) = first.get("total_nodes") {
-                    if let Some(nodes) = total_nodes.as_i64() {
-                        return nodes.to_string();
-                    }
-                }
-            }
-        }
-        "N/A".to_string()
-    }
+    assert!(result.is_some());
+    let parsed = result.unwrap();
+    assert_eq!(parsed.total_nodes, 16301);
 }
 
 #[tokio::test]
-async fn test_get_bitnodes_from_fixture() {
-    let result = MockClient::get_bitnodes_fixture().await;
+async fn test_parse_response_with_empty_data() {
+    let empty_data: serde_json::Value = serde_json::json!({ "results": [] });
+    let result = parse_response(empty_data);
+    assert!(result.is_none());
+}
+
+#[test]
+fn test_format_result() {
+    let data = BitnodesData { total_nodes: 16301 };
+    let result = format_result(data);
     assert_eq!(result, "16301");
-}
-
-#[tokio::test]
-async fn test_get_bitnodes_fixture_structure() {
-    let data = helpers::get_bitnodes_fixture();
-
-    // Verify fixture structure matches expected API response
-    assert!(data.get("count").is_some());
-    assert!(data.get("results").is_some());
-
-    let results = data.get("results").unwrap().as_array().unwrap();
-    assert!(!results.is_empty());
-
-    let first = &results[0];
-    assert_eq!(first.get("total_nodes").unwrap().as_i64(), Some(16301));
-    assert_eq!(first.get("latest_height").unwrap().as_i64(), Some(739023));
 }

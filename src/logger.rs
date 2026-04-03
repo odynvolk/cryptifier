@@ -12,11 +12,10 @@ pub fn init() {
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
 
     tracing_subscriber::registry()
-        .with(
-            fmt::layer()
-                .with_target(false)
-                .with_timer(local_time_timer as for<'a, 'b> fn(&'a mut tracing_subscriber::fmt::format::Writer) -> Result<(), std::fmt::Error>),
-        )
+        .with(fmt::layer().with_target(false).with_timer(
+            local_time_timer
+                as for<'a, 'b> fn(&'a mut tracing_subscriber::fmt::format::Writer) -> Result<(), std::fmt::Error>,
+        ))
         .with(env_filter)
         .init();
 }
