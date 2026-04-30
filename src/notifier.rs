@@ -41,6 +41,7 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
             let price = crypto_currency.usd.unwrap_or(0.0);
             let vol_24h = crypto_currency.usd_24h_vol.unwrap_or(0.0) / 1_000_000_000.0;
             let price_change = get_price_change(ticker, price, percentage_threshold);
+            logger::debug(&format!("price_change for {}: {:?}", ticker, price_change));
 
             if price_change != PriceChange::NoChange {
                 let display_price = price;
