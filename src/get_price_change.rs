@@ -25,17 +25,33 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
     }
 
     let last_price = *last_prices.get(ticker).unwrap();
-    last_prices.insert(ticker.to_string(), price);
-
+    logger::debug(
+        &format!(
+            "The last price for {} is {}",
+            ticker.to_string(),
+            last_price
+        )
+        .as_str(),
+    );
     // Calculate percentage change
     let percent_change = if last_price > 0.0 {
         ((price - last_price) / last_price) * 100.0
     } else {
-        0.0
+      last_prices.insert(ticker.to_string(), price);
+      logger::debug(
+          &format!(
+              "The last price for {} is updated to {}",
+              ticker.to_string(),
+              price
+          )
+          .as_str(),
+      );
+
+      0.0
     };
 
     logger::debug(
-        format!(
+        &format!(
             "The price percentage change is {} and the threshold is {}",
             percent_change.abs(),
             percentage_threshold
@@ -43,9 +59,20 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
         .as_str(),
     );
 
+
     // Check if percentage change exceeds threshold (absolute value)
     if percent_change.abs() > percentage_threshold {
-        if percent_change < 0.0 {
+      last_prices.insert(ticker.to_string(), price);
+      logger::debug(
+          &format!(
+              "The last price for {} is updated to {}",
+              ticker.to_string(),
+              price
+          )
+          .as_str(),
+      );
+
+      if percent_change < 0.0 {
             return PriceChange::Down;
         } else if percent_change > 0.0 {
             return PriceChange::Up;
