@@ -1,6 +1,6 @@
 //! ColinTalksCrypto Bitcoin Bull/Bear Index (CBBI) API integration.
 use crate::cache::LONG_CACHE;
-use crate::logger;
+use crate::cached_api::get_or_fetch_cached;
 
 /// Available metrics used to calculate the CBBI.
 const METRICS: &[&str] = &[
@@ -28,7 +28,7 @@ pub fn calculate_average(data: &serde_json::Value) -> i64 {
     let mut count = 0;
     for metric in METRICS.iter() {
         if let Some(serde_json::Value::Object(metric_obj)) = data.get(metric) {
-            if let Some(last_value) = metric_obj.values().last() {
+            if let Some(last_value) = metric_obj.values().next_back() {
                 if let Some(val) = last_value.as_f64() {
                     result += val;
                     count += 1;
@@ -47,29 +47,19 @@ pub fn calculate_average(data: &serde_json::Value) -> i64 {
 
 /// Fetches the current Bitcoin Bull/Bear Index (CBBI) from ColinTalksCrypto.
 pub async fn get_cbbi() -> i64 {
-    let value = LONG_CACHE.get("cbbi");
-    if let Some(value) = value {
-        return value.parse::<i64>().unwrap_or(-1);
-    }
-
-    match fetch_cbbi().await {
-        Ok(data) => match parse_response(data) {
-            Some(parsed) => {
-                let result = parsed.index_value;
-                LONG_CACHE.set("cbbi", result.to_string());
-                logger::debug(format!("Got CBBI from colintalkscrypto.com {}%", result).as_str());
-                result
-            }
-            None => {
-                logger::error("Failed to parse CBBI response");
-                -1
-            }
-        },
-        Err(e) => {
-            logger::error(format!("Failed to get CBBI from colintalkscrypto.com: {}", e).as_str());
-            -1
-        }
-    }
+    get_or_fetch_cached(
+        &LONG_CACHE,
+        "cbbi",
+        fetch_cbbi,
+        parse_response,
+        |data: CbbiData| data.index_value.to_string(),
+        "Got CBBI from colintalkscrypto.com {}%",
+        "Failed to parse CBBI response",
+        "Failed to get CBBI from colintalkscrypto.com: {}",
+    )
+    .await
+    .parse::<i64>()
+    .unwrap_or(-1)
 }
 
 /// Fetches raw JSON response from the CBBI API.

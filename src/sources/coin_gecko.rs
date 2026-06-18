@@ -29,7 +29,7 @@ pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, Co
 
     match fetch_ticker(id).await {
         Ok(data) => {
-            if let Some(cached_value) = serde_json::to_string(&data).ok() {
+            if let Ok(cached_value) = serde_json::to_string(&data) {
                 SHORT_CACHE.set(&cache_key, cached_value);
             }
             logger::debug(

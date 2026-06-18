@@ -126,7 +126,7 @@ pub async fn notify(ticker: &str, text: &str) -> bool {
                 logger::info(format!("Notified {} users about {}", success_count, ticker).as_str());
                 true
             } else {
-                logger::error("Failed to notify users of price change!");
+                logger::error(format!("Failed to notify users of price change!").as_str());
                 false
             }
         }

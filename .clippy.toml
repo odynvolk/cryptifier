@@ -30,9 +30,6 @@ allow-unnecessary-wrappers = false
 # Allow print macros in tests only
 allow-print-in-tests = true
 
-# Allow unwrap in tests
-allow-unwrap-in-tests = true
-
 # Allowed errors
 allowed-errors = [
     "Box<dyn std::error::Error>",

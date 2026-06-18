@@ -1,6 +1,6 @@
 //! Bitnodes.io API integration for Bitcoin network statistics.
 use crate::cache::LONG_CACHE;
-use crate::logger;
+use crate::cached_api::get_or_fetch_cached;
 
 /// Struct to hold parsed Bitnodes data
 #[derive(Debug, Clone)]
@@ -10,29 +10,17 @@ pub struct BitnodesData {
 
 /// Fetches the current number of reachable Bitcoin nodes from Bitnodes.io.
 pub async fn get_bitnodes() -> String {
-    let value = LONG_CACHE.get("bitnodes");
-    if let Some(value) = value {
-        return value.clone();
-    }
-
-    match fetch_bitnodes().await {
-        Ok(data) => match parse_response(data) {
-            Some(parsed) => {
-                let result = format_result(parsed);
-                LONG_CACHE.set("bitnodes", result.clone());
-                logger::debug(format!("Got nodes from bitnodes.io {}", result).as_str());
-                result
-            }
-            None => {
-                logger::error("Failed to parse bitnodes response");
-                "N/A".to_string()
-            }
-        },
-        Err(e) => {
-            logger::error(format!("Failed to get nodes from bitnodes.io: {}", e).as_str());
-            "N/A".to_string()
-        }
-    }
+    get_or_fetch_cached(
+        &LONG_CACHE,
+        "bitnodes",
+        fetch_bitnodes,
+        parse_response,
+        format_result,
+        "Got nodes from bitnodes.io {}",
+        "Failed to parse bitnodes response",
+        "Failed to get nodes from bitnodes.io: {}",
+    )
+    .await
 }
 
 /// Fetches raw JSON response from the Bitnodes.io API.

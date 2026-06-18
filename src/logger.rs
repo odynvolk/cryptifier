@@ -8,7 +8,7 @@ fn local_time_timer(buf: &mut tracing_subscriber::fmt::format::Writer) -> Result
 }
 
 pub fn init() {
-    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+    let env_filter = tracing_subscriber::EnvFilter::try_from_env("APP__LOG_LEVEL")
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
 
     tracing_subscriber::registry()
@@ -21,15 +21,13 @@ pub fn init() {
 }
 
 pub fn info(msg: &str) {
-    tracing::info!("{}", msg);
-    println!("{}", msg);
+    tracing::info!(msg);
 }
 
 pub fn debug(msg: &str) {
-    tracing::debug!("{}", msg);
-    println!("{}", msg);
+    tracing::debug!(msg);
 }
 
 pub fn error(msg: &str) {
-    tracing::error!("{}", msg);
+    tracing::error!(msg);
 }
