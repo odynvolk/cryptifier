@@ -49,11 +49,11 @@ where
                     cache.set(cache_key, result.clone());
                     // Replace the first occurrence of "{}" in the success message with the result
                     let success_msg = success_log_msg.replacen("{}", &result, 1);
-                    logger::debug(&success_msg);
+                    logger::debug(&format!("{}", &success_msg));
                     result
                 }
                 None => {
-                    logger::error(parse_error_msg);
+                    logger::error(&format!("{}", parse_error_msg));
                     "N/A".to_string()
                 }
             }
@@ -61,7 +61,7 @@ where
         Err(e) => {
             // Replace the first occurrence of "{}" in the fetch error message with the error
             let error_msg = fetch_error_msg.replacen("{}", &e.to_string(), 1);
-            logger::error(&error_msg);
+            logger::error(&format!("{}", &error_msg));
             "N/A".to_string()
         }
     }

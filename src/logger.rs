@@ -1,5 +1,5 @@
 //! Logging configuration and utilities.
-use chrono::{DateTime, Local};
+use chrono::Local;
 use tracing_subscriber::{fmt, prelude::*};
 
 fn local_time_timer(buf: &mut tracing_subscriber::fmt::format::Writer) -> Result<(), std::fmt::Error> {
@@ -8,7 +8,7 @@ fn local_time_timer(buf: &mut tracing_subscriber::fmt::format::Writer) -> Result
 }
 
 pub fn init() {
-    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+    let env_filter = tracing_subscriber::EnvFilter::try_from_env("APP__LOG_LEVEL")
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
 
     tracing_subscriber::registry()
@@ -21,22 +21,13 @@ pub fn init() {
 }
 
 pub fn info(msg: &str) {
-    tracing::info!("{}", msg);
-    log(msg);
+    tracing::info!(msg);
 }
 
 pub fn debug(msg: &str) {
-    tracing::debug!("{}", msg);
-    log(msg);
+    tracing::debug!(msg);
 }
 
 pub fn error(msg: &str) {
-    tracing::error!("{}", msg);
-    log(msg);
-}
-
-fn log(msg: &str) {
-  let current_local: DateTime<Local> = Local::now();
-  let custom_format = current_local.format("%Y-%m-%d %H:%M:%S");
-  println!("{} - {}", custom_format, msg);
+    tracing::error!(msg);
 }
