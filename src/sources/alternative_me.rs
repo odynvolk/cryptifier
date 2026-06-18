@@ -1,6 +1,6 @@
 //! Alternative.me Fear & Greed Index API integration.
 use crate::cache::LONG_CACHE;
-use crate::logger;
+use crate::cached_api::get_or_fetch_cached;
 
 /// Struct to hold parsed Fear & Greed Index data
 #[derive(Debug, Clone)]
@@ -11,29 +11,17 @@ pub struct FearGreedData {
 
 /// Fetches the current Fear & Greed Index from Alternative.me.
 pub async fn get_fear_greed_index() -> String {
-    let value = LONG_CACHE.get("f&gi");
-    if let Some(value) = value {
-        return value.clone();
-    }
-
-    match fetch_fear_greed().await {
-        Ok(data) => match parse_response(data) {
-            Some(parsed) => {
-                let result = format_result(parsed);
-                LONG_CACHE.set("f&gi", result.clone());
-                logger::debug(format!("Got F&GI from api.alternative.me {}", result).as_str());
-                result
-            }
-            None => {
-                logger::error("Failed to parse fear & greed response");
-                "N/A".to_string()
-            }
-        },
-        Err(e) => {
-            logger::error(format!("Failed to get F&GI from api.alternative.me: {}", e).as_str());
-            "N/A".to_string()
-        }
-    }
+    get_or_fetch_cached(
+        &LONG_CACHE,
+        "f&gi",
+        fetch_fear_greed,
+        parse_response,
+        format_result,
+        "Got F&GI from api.alternative.me {}",
+        "Failed to parse fear & greed response",
+        "Failed to get F&GI from api.alternative.me: {}",
+    )
+    .await
 }
 
 /// Fetches raw JSON response from the Alternative.me API.

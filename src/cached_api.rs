@@ -1,15 +1,8 @@
-use crate::cache::{Cache, LONG_CACHE};
+use crate::cache::Cache;
 use crate::logger;
-use futures::Future;
-use once_cell::sync::Lazy;
-use pin_project_lite::pin_project;
 use reqwest::Error;
 use serde_json::Value;
-use std::pin::Pin;
-use std::sync::LazyLock;
-
-// We'll use a static reference to LONG_CACHE, but note that LONG_CACHE is already a Lazy<Cache<String>>
-// We can use it directly.
+use std::future::Future;
 
 /// Generic function to fetch data from an API with caching, parsing, and formatting.
 ///
@@ -20,9 +13,9 @@ use std::sync::LazyLock;
 // * `fetch` - A function that returns a future resolving to the raw JSON response
 // * `parse` - A function that parses the JSON into a typed value
 // * `format` - A function that formats the typed value into a display string
-// * `success_log_msg` - Message to log on success (will be formatted with the result string)
+// * `success_log_msg` - Message to log on success (will have "{}" replaced with the result string)
 // * `parse_error_msg` - Message to log if parsing fails
-// * `fetch_error_msg` - Message to log if fetching fails (will be formatted with the error)
+// * `fetch_error_msg` - Message to log if fetching fails (will have "{}" replaced with the error)
 pub async fn get_or_fetch_cached<T, F, Fut, P, Fmt>(
     cache: &'static Cache<String>,
     cache_key: &'static str,
@@ -54,7 +47,9 @@ where
                     // Format and cache the result
                     let result = format(parsed);
                     cache.set(cache_key, result.clone());
-                    logger::debug(&format!(success_log_msg, result));
+                    // Replace the first occurrence of "{}" in the success message with the result
+                    let success_msg = success_log_msg.replacen("{}", &result, 1);
+                    logger::debug(&success_msg);
                     result
                 }
                 None => {
@@ -64,7 +59,9 @@ where
             }
         }
         Err(e) => {
-            logger::error(&format!(fetch_error_msg, e));
+            // Replace the first occurrence of "{}" in the fetch error message with the error
+            let error_msg = fetch_error_msg.replacen("{}", &e.to_string(), 1);
+            logger::error(&error_msg);
             "N/A".to_string()
         }
     }

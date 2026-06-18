@@ -1,4 +1,5 @@
 pub mod cache;
+pub mod cached_api;
 pub mod common;
 pub mod config;
 pub mod errors;
