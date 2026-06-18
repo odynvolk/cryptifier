@@ -1,5 +1,5 @@
 //! Logging configuration and utilities.
-use chrono::Local;
+use chrono::{DateTime, Local};
 use tracing_subscriber::{fmt, prelude::*};
 
 fn local_time_timer(buf: &mut tracing_subscriber::fmt::format::Writer) -> Result<(), std::fmt::Error> {
@@ -22,14 +22,21 @@ pub fn init() {
 
 pub fn info(msg: &str) {
     tracing::info!("{}", msg);
-    println!("{}", msg);
+    log(msg);
 }
 
 pub fn debug(msg: &str) {
     tracing::debug!("{}", msg);
-    println!("{}", msg);
+    log(msg);
 }
 
 pub fn error(msg: &str) {
     tracing::error!("{}", msg);
+    log(msg);
+}
+
+fn log(msg: &str) {
+  let current_local: DateTime<Local> = Local::now();
+  let custom_format = current_local.format("%Y-%m-%d %H:%M:%S");
+  println!("{} - {}", custom_format, msg);
 }
