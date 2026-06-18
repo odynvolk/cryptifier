@@ -28,7 +28,7 @@ pub fn calculate_average(data: &serde_json::Value) -> i64 {
     let mut count = 0;
     for metric in METRICS.iter() {
         if let Some(serde_json::Value::Object(metric_obj)) = data.get(metric) {
-            if let Some(last_value) = metric_obj.values().last() {
+            if let Some(last_value) = metric_obj.values().next_back() {
                 if let Some(val) = last_value.as_f64() {
                     result += val;
                     count += 1;

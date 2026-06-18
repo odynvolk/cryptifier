@@ -28,10 +28,9 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
     logger::debug(
         &format!(
             "The last price for {} is {}",
-            ticker.to_string(),
+            ticker,
             last_price
         )
-        .as_str(),
     );
     // Calculate percentage change
     let percent_change = if last_price > 0.0 {
@@ -41,10 +40,9 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
       logger::debug(
           &format!(
               "The last price for {} is updated to {}",
-              ticker.to_string(),
+              ticker,
               price
           )
-          .as_str(),
       );
 
       0.0
@@ -56,7 +54,6 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
             percent_change.abs(),
             percentage_threshold
         )
-        .as_str(),
     );
 
 
@@ -66,10 +63,9 @@ pub fn get_price_change(ticker: &str, price: f64, percentage_threshold: f64) -> 
       logger::debug(
           &format!(
               "The last price for {} is updated to {}",
-              ticker.to_string(),
+              ticker,
               price
           )
-          .as_str(),
       );
 
       if percent_change < 0.0 {
