@@ -40,6 +40,64 @@ APP__QUIET_MODE_START_HOUR=0
 APP__QUIET_MODE_END_HOUR=6
 ```
 
+## Running
+
+### Native (Cargo)
+
+```bash
+cargo run --release
+```
+
+### Docker
+
+Build and run with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Run in the background:
+
+```bash
+docker compose up --build -d
+```
+
+Stop the service:
+
+```bash
+docker compose down
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+#### Docker Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- A `.env` file in the project root (copy from `.env.example` and fill in your values)
+
+#### Docker Architecture
+
+The Dockerfile uses a multi-stage build:
+
+1. **Builder stage** — Compiles the Rust binary with full toolchain
+2. **Runtime stage** — Minimal Debian image with only the release binary
+
+The final image is ~50MB (vs ~1GB for a single-stage build).
+
+#### Docker Compose Configuration
+
+`docker-compose.yml` provides:
+
+- **Auto-restart** — Container restarts unless explicitly stopped
+- **Volume mount** — `.env` is mounted read-only for live config updates
+- **Resource limits** — CPU and memory limits to prevent runaway processes
+- **Health check** — Verifies the process is running every 30 seconds
+
 ## Running Tests
 
 To run all tests:
