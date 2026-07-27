@@ -1,0 +1,40 @@
+# Build dependencies
+/.pi
+/.ralph
+/.git
+/.gitignore
+/.DS_Store
+*.iml
+.idea/
+.vscode/
+
+# Build artifacts
+/target
+**/target/
+
+# Node.js (not needed for Rust build)
+/node_modules
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+/logs
+*.log
+
+# Local config (not committed anyway)
+.env
+
+# Test data
+/tests/data/
+/coverage
+
+# Misc
+.eslintcache
+.tern-port
+.tern-project
+*.tgz
+dist
+tags

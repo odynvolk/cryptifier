@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  cryptifier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cryptifier
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount .env file for live updates without rebuilding
+      - ./.env:/app/.env:ro
+    # Optional: Set resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
