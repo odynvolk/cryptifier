@@ -10,11 +10,11 @@ pub fn load_fixture(name: &str) -> serde_json::Value {
 }
 
 pub fn get_fng_fixture() -> serde_json::Value {
-    load_fixture("alternative-me")
+    load_fixture("alternative_me")
 }
 
-pub fn get_bitnodes_fixture() -> serde_json::Value {
-    load_fixture("bitnodes")
+pub fn get_bitdis_fixture() -> serde_json::Value {
+    load_fixture("bitdis")
 }
 
 pub fn get_cbbi_fixture() -> serde_json::Value {

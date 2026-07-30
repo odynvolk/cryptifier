@@ -5,7 +5,7 @@ use crate::get_price_change::get_price_change;
 use crate::logger;
 use crate::notifiers::telegram;
 use crate::sources::alternative_me;
-use crate::sources::bitnodes;
+use crate::sources::bitdis;
 use crate::sources::cbbi;
 use crate::sources::coin_gecko;
 use std::future::Future;
@@ -46,10 +46,10 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
             if price_change != PriceChange::NoChange {
                 let display_price = price;
                 if ticker == "bitcoin" {
-                    let (cbbi, fgi, bitnodes) = tokio::join!(
+                    let (cbbi, fgi, bitdis) = tokio::join!(
                         cbbi::get_cbbi(),
                         alternative_me::get_fear_greed_index(),
-                        bitnodes::get_bitnodes()
+                        bitdis::get_bitdis()
                     );
 
                     let text = format!(
@@ -58,7 +58,7 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
                         percentage_threshold,
                         display_price,
                         vol_24h,
-                        bitnodes,
+                        bitdis,
                         fgi,
                         cbbi,
                     );
