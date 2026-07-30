@@ -3,7 +3,7 @@
 Fetches...
 
 1. Price and trading volume of crypto currencies from [https://www.coingecko.com/](https://colintalkscrypto.com/)
-2. Number of reachable Bitcoin nodes from [https://bitnodes.io/](https://bitnodes.io/)
+2. Number of Bitcoin nodes from [https://bitdis.org/](https://bitdis.org/)
 3. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
 3. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
 
@@ -20,7 +20,7 @@ src/tests/
 ├── mock_data.rs        # Mock data structures for all APIs
 ├── coin_gecko_tests.rs # Tests for CoinGecko API
 ├── alternative_me_tests.rs # Tests for Alternative.me API
-├── bitnodes_tests.rs   # Tests for Bitnodes.io API
+├── bitdis_tests.rs # Tests for Bitdis.org API
 └── cbbi_tests.rs       # Tests for ColinTalksCrypto CBBI API
 ```
 

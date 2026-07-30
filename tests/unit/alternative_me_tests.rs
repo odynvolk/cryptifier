@@ -5,7 +5,7 @@ use cryptifier::sources::alternative_me::{format_result, parse_response, FearGre
 
 #[tokio::test]
 async fn test_parse_response_with_valid_data() {
-    let data = helpers::load_fixture("alternative-me");
+    let data = helpers::load_fixture("alternative_me");
 
     let result = parse_response(data);
 
