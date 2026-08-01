@@ -42,6 +42,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r cryptifier && useradd -r -g cryptifier cryptifier
 
+RUN apt-get install tzdata
+
 WORKDIR /app
 
 # Copy the built binary from builder stage
@@ -61,6 +63,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD pgrep -f cryptifier || exit 1
 
 # Expose no ports (this is a background monitoring service, not a web server)
+
+ENV TZ=Europe/Berlin
 
 # Run the application
 ENTRYPOINT ["/app/cryptifier"]
