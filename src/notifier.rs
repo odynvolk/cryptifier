@@ -8,8 +8,6 @@ use crate::sources::alternative_me;
 use crate::sources::bitdis;
 use crate::sources::cbbi;
 use crate::sources::coin_gecko;
-use std::future::Future;
-use std::pin::Pin;
 
 pub fn to_upper_case(ticker: &str) -> String {
     let mut chars = ticker.chars();
@@ -27,11 +25,11 @@ pub fn price_change_as_text(change: &PriceChange) -> String {
     }
 }
 
-async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
+async fn get_and_notify(ticker: &str, percentage_threshold: f64) {
     // Check if we're in quiet mode
     if is_quiet_mode_enabled() && is_quiet_hours() {
         logger::debug(&format!("Quiet mode: skipping notification for {}", ticker));
-        return false;
+        return;
     }
 
     let data = coin_gecko::get_ticker(ticker).await;
@@ -62,7 +60,7 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
                         fgi,
                         cbbi,
                     );
-                    return telegram::notify(ticker, &text).await;
+                    telegram::notify(ticker, &text).await;
                 }
 
                 let upper_case_ticker = to_upper_case(ticker);
@@ -73,37 +71,24 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
                     percent_change.abs(),
                     display_price
                 );
-                return telegram::notify(ticker, &text).await;
+                telegram::notify(ticker, &text).await;
             }
         }
     }
 
-    false
 }
 
-/// Type alias for notification futures.
-type NotifyFuture = Pin<Box<dyn Future<Output = bool> + Send>>;
 
 /// Runs a single iteration of price checking for all configured currencies.
-async fn run_once() -> Vec<bool> {
+async fn run_once() {
     let currencies = get_currencies();
-    let mut futures = Vec::new();
 
     for currency in currencies.iter() {
         let ticker = currency.ticker.clone();
         let percentage_threshold = currency.percentage_threshold;
-        let future: NotifyFuture = Box::pin(async move { get_and_notify(&ticker, percentage_threshold).await });
-        futures.push(future);
+        get_and_notify(&ticker, percentage_threshold).await;
     }
-
-    let mut results = Vec::new();
-    for future in futures {
-        let result = future.await;
-        results.push(result);
-    }
-    results
 }
-
 /// Main entry point for the notification service.
 pub async fn run() {
     let currencies = get_currencies();

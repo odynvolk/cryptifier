@@ -5,13 +5,3 @@ pub enum PriceChange {
     Down,
     NoChange,
 }
-
-impl PriceChange {
-    pub fn as_text(&self) -> &'static str {
-        match self {
-            PriceChange::Up => "up",
-            PriceChange::Down => "down",
-            PriceChange::NoChange => "no change",
-        }
-    }
-}

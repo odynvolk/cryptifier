@@ -2,7 +2,6 @@ pub mod cache;
 pub mod cached_api;
 pub mod common;
 pub mod config;
-pub mod errors;
 pub mod get_price_change;
 pub mod logger;
 pub mod notifier;
