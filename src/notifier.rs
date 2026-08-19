@@ -40,7 +40,7 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
         if let Some(crypto_currency) = data.get(ticker) {
             let price = crypto_currency.usd.unwrap_or(0.0);
             let vol_24h = crypto_currency.usd_24h_vol.unwrap_or(0.0) / 1_000_000_000.0;
-            let price_change = get_price_change(ticker, price, percentage_threshold);
+            let (price_change, percent_change) = get_price_change(ticker, price, percentage_threshold);
             logger::debug(&format!("price_change for {}: {:?}", ticker, price_change));
 
             if price_change != PriceChange::NoChange {
@@ -53,9 +53,9 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
                     );
 
                     let text = format!(
-                        "🟠 <b>Bitcoin</b> is {} {}%! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
+                        "🟠 <b>Bitcoin</b> is {} {:.2}%! ${}\n📈 24h vol: ${:.2}B\n🔗 Reachable nodes: {}\n😈 F&GI: {}\n📊 CBBI: {}%",
                         price_change_as_text(&price_change),
-                        percentage_threshold,
+                        percent_change.abs(),
                         display_price,
                         vol_24h,
                         bitdis,
@@ -67,10 +67,10 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) -> bool {
 
                 let upper_case_ticker = to_upper_case(ticker);
                 let text = format!(
-                    "💰 <b>{}</b> is {} {}%! ${}",
+                    "💰 <b>{}</b> is {} {:.2}%! ${}",
                     upper_case_ticker,
                     price_change_as_text(&price_change),
-                    percentage_threshold,
+                    percent_change.abs(),
                     display_price
                 );
                 return telegram::notify(ticker, &text).await;
