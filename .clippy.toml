@@ -1,72 +1,20 @@
 # Clippy linting configuration
 
-# Maximum function length
-function-max-lines = 100
-
-# Maximum struct field count
-struct-field-excess = 5
-
-# Maximum match arms
-match-expr-blocks = true
-
-# Allow certain lints
-allow-unwrap-in-tests = true
-
-# Disallow unwrap in production code
-disallowed-types = []
-
-# Maximum cyclomatic complexity
-complexity-threshold = 25
+# Maximum function length (lines)
+too-many-lines-threshold = 100
 
 # Maximum cognitive complexity
 cognitive-complexity-threshold = 15
 
-# Allow shadowing
-allow-shadow = false
-
-# Allow unnecessary operations
-allow-unnecessary-wrappers = false
-
-# Allow print macros in tests only
+allow-unwrap-in-tests = true
+allow-dbg-in-tests = true
 allow-print-in-tests = true
-
-# Allowed errors
-allowed-errors = [
-    "Box<dyn std::error::Error>",
-    "std::io::Error",
-    "serde_json::Error",
-    "tokio::task::JoinError",
-]
+allow-expect-in-tests = true
+allow-panic-in-tests = true
 
 # Disallowed methods
+# NOTE: std::env::var is intentionally NOT disallowed here because
+# src/config.rs legitimately reads environment variables through it.
 disallowed-methods = [
-    { path = "std::env::set_var", reason = "Use proper config management" },
-    { path = "std::env::var", reason = "Use config module instead" },
+    { path = "std::env::set_var", reason = "Use dotenvy to load .env instead" },
 ]
-
-# Allowed types
-allowed-types = []
-
-# Allowed traits
-allowed-traits = []
-
-# Allowed lints
-allowed-lints = ["clippy::doc-markdown"]
-
-# Allowed items
-allowed-items = []
-
-# Allowed prefixes
-allowed-prefixes = ["as_", "is_", "has_", "should_"]
-
-# Allowed wildcard imports
-allowed-wildcard-imports = []
-
-# Allowed wildcard patterns
-allowed-wildcard-patterns = []
-
-# Allowed wildcard types
-allowed-wildcard-types = []
-
-# Allowed wildcard expressions
-allowed-wildcard-expressions = []

@@ -39,10 +39,13 @@ FROM debian:bookworm-slim AS runtime
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    procps \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r cryptifier && useradd -r -g cryptifier cryptifier
 
-RUN apt-get install tzdata
+# tzdata prompts for a timezone interactively; DEBIAN_FRONTEND avoids the hang
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

@@ -9,7 +9,7 @@ fn test_price_change_up_above_threshold() {
     let _ = get_price_change("test_up1", new_price, threshold);
 
     // Second call triggers price change
-    let result = get_price_change("test_up1", 120.0, threshold); // 9.09% increase
+    let (result, _) = get_price_change("test_up1", 120.0, threshold); // 9.09% increase
     assert_eq!(result, PriceChange::Up);
 }
 
@@ -20,7 +20,7 @@ fn test_price_change_down_above_threshold() {
 
     let _ = get_price_change("test_down1", 100.0, threshold);
 
-    let result = get_price_change("test_down1", new_price, threshold);
+    let (result, _) = get_price_change("test_down1", new_price, threshold);
     assert_eq!(result, PriceChange::Down);
 }
 
@@ -31,7 +31,7 @@ fn test_price_change_up_below_threshold() {
 
     let _ = get_price_change("test_up2", 100.0, threshold);
 
-    let result = get_price_change("test_up2", new_price, threshold);
+    let (result, _) = get_price_change("test_up2", new_price, threshold);
     assert_eq!(result, PriceChange::NoChange);
 }
 
@@ -42,7 +42,7 @@ fn test_price_change_down_below_threshold() {
 
     let _ = get_price_change("test_down2", 100.0, threshold);
 
-    let result = get_price_change("test_down2", new_price, threshold);
+    let (result, _) = get_price_change("test_down2", new_price, threshold);
     assert_eq!(result, PriceChange::NoChange);
 }
 
@@ -53,7 +53,7 @@ fn test_price_change_exact_threshold() {
 
     let _ = get_price_change("test_exact", 100.0, threshold);
 
-    let result = get_price_change("test_exact", new_price, threshold);
+    let (result, _) = get_price_change("test_exact", new_price, threshold);
     // Using > comparison, so exact threshold should return NoChange
     assert_eq!(result, PriceChange::NoChange);
 }
@@ -63,7 +63,7 @@ fn test_first_price_update() {
     let first_price = 100.0;
     let threshold = 5.0;
 
-    let result = get_price_change("test_first", first_price, threshold);
+    let (result, _) = get_price_change("test_first", first_price, threshold);
     assert_eq!(result, PriceChange::NoChange);
 }
 
@@ -77,7 +77,7 @@ fn test_price_change_zero_threshold() {
     let _ = get_price_change("test_zero", 100.0, threshold);
 
     // Second call triggers price change
-    let result = get_price_change("test_zero", new_price, threshold);
+    let (result, _) = get_price_change("test_zero", new_price, threshold);
     // Should trigger Up since 0.01% > 0%
     assert_eq!(result, PriceChange::Up);
 }
