@@ -2,6 +2,7 @@
 use crate::cache::LONG_CACHE;
 use crate::cached_api::get_or_fetch_cached;
 
+use crate::http::shared_client;
 #[derive(Debug, Clone)]
 pub struct BitdisData {
     pub total_nodes: i64,
@@ -22,7 +23,7 @@ pub async fn get_bitdis() -> String {
 }
 
 pub async fn fetch_bitdis() -> Result<serde_json::Value, reqwest::Error> {
-    let client = reqwest::Client::new();
+    let client = shared_client();
 
     let resp = client
         .get("https://bitdis.org/api/live-data")

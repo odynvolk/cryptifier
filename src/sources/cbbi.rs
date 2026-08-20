@@ -3,6 +3,7 @@ use crate::cache::LONG_CACHE;
 use crate::cached_api::get_or_fetch_cached;
 
 /// Available metrics used to calculate the CBBI.
+use crate::http::shared_client;
 const METRICS: &[&str] = &[
     "PiCycle",
     "RUPL",
@@ -64,7 +65,7 @@ pub async fn get_cbbi() -> i64 {
 
 /// Fetches raw JSON response from the CBBI API.
 pub async fn fetch_cbbi() -> Result<serde_json::Value, reqwest::Error> {
-    let client = reqwest::Client::new();
+    let client = shared_client();
 
     let resp = client
         .get("https://colintalkscrypto.com/cbbi/data/latest.json")

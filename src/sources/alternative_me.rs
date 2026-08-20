@@ -3,6 +3,7 @@ use crate::cache::LONG_CACHE;
 use crate::cached_api::get_or_fetch_cached;
 
 /// Struct to hold parsed Fear & Greed Index data
+use crate::http::shared_client;
 #[derive(Debug, Clone)]
 pub struct FearGreedData {
     pub value_classification: String,
@@ -26,7 +27,7 @@ pub async fn get_fear_greed_index() -> String {
 
 /// Fetches raw JSON response from the Alternative.me API.
 pub async fn fetch_fear_greed() -> Result<serde_json::Value, reqwest::Error> {
-    let client = reqwest::Client::new();
+    let client = shared_client();
 
     let resp = client
         .get("https://api.alternative.me/fng/?limit=1&format=json")

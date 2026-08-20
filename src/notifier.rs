@@ -82,12 +82,17 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) {
 /// Runs a single iteration of price checking for all configured currencies.
 async fn run_once() {
     let currencies = get_currencies();
+    let mut set = tokio::task::JoinSet::new();
 
     for currency in currencies.iter() {
         let ticker = currency.ticker.clone();
         let percentage_threshold = currency.percentage_threshold;
-        get_and_notify(&ticker, percentage_threshold).await;
+        set.spawn(async move {
+            get_and_notify(&ticker, percentage_threshold).await;
+        });
     }
+
+    set.join_all().await;
 }
 /// Main entry point for the notification service.
 pub async fn run() {
