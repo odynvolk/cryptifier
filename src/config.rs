@@ -61,7 +61,6 @@ pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
         ]
     });
 
-    println!("{}", currencies_str);
     logger::debug(&format!("Loaded currencies: {:?}", currencies));
     AppConfig {
         log_level: env::var("APP__LOG_LEVEL").ok(),
@@ -87,13 +86,6 @@ pub fn get_notifier_sleep() -> i64 {
 }
 
 /// Returns the percentage threshold for a currency.
-pub fn get_percentage_threshold(ticker: &str) -> f64 {
-    get_currencies()
-        .iter()
-        .find(|c| c.ticker == ticker)
-        .map(|c| c.percentage_threshold)
-        .unwrap_or(5.0) // Default 5% threshold
-}
 
 pub fn is_quiet_mode_enabled() -> bool {
     CONFIG.quiet_mode_enabled.unwrap_or(false)
