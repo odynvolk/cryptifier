@@ -1,3 +1,4 @@
+pub mod http;
 pub mod cache;
 pub mod cached_api;
 pub mod common;

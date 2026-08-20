@@ -6,6 +6,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 /// Retrieves chat IDs from the application configuration.
+use crate::http::shared_client;
 async fn get_chat_ids_from_config() -> Vec<String> {
     CONFIG
         .telegram_chat_ids
@@ -22,7 +23,7 @@ async fn get_chat_ids() -> Vec<String> {
             return serde_json::from_str(&value).unwrap_or_default();
         }
 
-        let client = reqwest::Client::new();
+        let client = shared_client();
         let api_key = CONFIG.telegram_api_key.clone().unwrap_or_default();
 
         let url = format!("https://api.telegram.org/bot{}/getUpdates", api_key);
@@ -81,7 +82,7 @@ async fn get_chat_ids() -> Vec<String> {
 
 /// Sends a text message to a specific Telegram chat.
 async fn send_text(chat_id: &str, text: &str) -> Result<(), reqwest::Error> {
-    let client = reqwest::Client::new();
+    let client = shared_client();
     let api_key = CONFIG.telegram_api_key.clone().unwrap_or_default();
 
     let url = format!("https://api.telegram.org/bot{}/sendMessage", api_key);

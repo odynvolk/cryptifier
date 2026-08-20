@@ -3,6 +3,7 @@ use crate::cache::SHORT_CACHE;
 use crate::logger;
 
 /// Price data for a cryptocurrency from CoinGecko.
+use crate::http::shared_client;
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct CoinPrice {
     pub usd: Option<f64>,
@@ -51,7 +52,7 @@ pub async fn get_ticker(id: &str) -> Option<std::collections::HashMap<String, Co
 
 /// Fetches raw JSON response from the CoinGecko API.
 pub async fn fetch_ticker(id: &str) -> Result<std::collections::HashMap<String, CoinPrice>, reqwest::Error> {
-    let client = reqwest::Client::new();
+    let client = shared_client();
 
     let resp = client
         .get(format!(
