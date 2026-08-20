@@ -25,6 +25,22 @@ pub fn price_change_as_text(change: &PriceChange) -> String {
     }
 }
 
+/// Builds the price-change notification body (pure, no I/O).
+pub fn format_price_notification(
+    ticker: &str,
+    change: &PriceChange,
+    percent_change: f64,
+    price: f64,
+) -> String {
+    format!(
+        "💰 <b>{}</b> is {} {:.2}%! ${}",
+        ticker,
+        price_change_as_text(change),
+        percent_change.abs(),
+        price
+    )
+}
+
 async fn get_and_notify(ticker: &str, percentage_threshold: f64) {
     // Check if we're in quiet mode
     if is_quiet_mode_enabled() && is_quiet_hours() {
@@ -64,11 +80,10 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) {
                 }
 
                 let upper_case_ticker = to_upper_case(ticker);
-                let text = format!(
-                    "💰 <b>{}</b> is {} {:.2}%! ${}",
-                    upper_case_ticker,
-                    price_change_as_text(&price_change),
-                    percent_change.abs(),
+                let text = format_price_notification(
+                    &upper_case_ticker,
+                    &price_change,
+                    percent_change,
                     display_price
                 );
                 telegram::notify(ticker, &text).await;

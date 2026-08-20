@@ -1,155 +1,78 @@
 # Cryptifier
 
-Fetches...
+A Rust service that watches cryptocurrency prices and sends **Telegram alerts**
+when a coin moves more than a configured percentage — reporting the **actual**
+measured change, not the threshold.
 
-1. Price and trading volume of crypto currencies from [https://www.coingecko.com/](https://colintalkscrypto.com/)
-2. Number of Bitcoin nodes from [https://bitdis.org/](https://bitdis.org/)
-3. CBBI from [https://colintalkscrypto.com/](https://colintalkscrypto.com/)
-3. Fear and Greed index from [https://alternative.me/](https://alternative.me/)
+## What it does
 
-Notifies users of price going up or down in percentages via...
+- Polls configured currencies (default: `bitcoin`, `ethereum`) every
+  `APP__NOTIFIER_SLEEP` seconds (default 300).
+- Computes the real percentage move between polls via `get_price_change`.
+- When the move exceeds a coin's `percentage_threshold`, it builds a message
+  like `💰 <b>Bitcoin</b> is up 5.40%! $71000` and sends it to Telegram.
+- For `bitcoin`, the message also includes 24h volume, reachable Bitcoin nodes,
+  the Fear & Greed index, and the CBBI (ColinTalksCrypto) index.
+- All currencies are checked **concurrently** (`tokio::task::JoinSet`), and every
+  HTTP call shares **one `reqwest::Client`** connection pool (`src/http.rs`).
 
-1. Telegram via a TelegramBot
+## Architecture
 
-## Structure
+| Module | Purpose |
+|---|---|
+| `src/notifier.rs` | Orchestration loop: price checks + Telegram notifications |
+| `src/get_price_change.rs` | Tracks last-seen prices, returns `(PriceChange, actual %)` |
+| `src/config.rs` | Reads env config, defaults to bitcoin/ethereum at 2.0% |
+| `src/cache.rs` | Generic `Cache<T>` with TTL |
+| `src/cached_api.rs` | Wraps sources with short (10 min) / long (12 h) caches |
+| `src/http.rs` | Single shared `reqwest::Client` for all API calls |
+| `src/sources/` | CoinGecko, bitdis.org, alternative.me (F&G), colintalkscrypto (CBBI) |
+| `src/notifiers/telegram.rs` | Telegram bot: `notify(ticker, text)` |
 
-```
-src/tests/
-├── mod.rs              # Test module exports
-├── README.md           # This file
-├── mock_data.rs        # Mock data structures for all APIs
-├── coin_gecko_tests.rs # Tests for CoinGecko API
-├── alternative_me_tests.rs # Tests for Alternative.me API
-├── bitdis_tests.rs # Tests for Bitdis.org API
-└── cbbi_tests.rs       # Tests for ColinTalksCrypto CBBI API
-```
+## Configuration (env vars)
 
-## Configuration
+| Var | Default | Purpose |
+|---|---|---|
+| `APP__CURRENCIES` | `[{"ticker":"bitcoin","percentage_threshold":2.0},{"ticker":"ethereum","percentage_threshold":2.0}]` | JSON list of coins + move threshold (%) |
+| `APP__NOTIFIER_SLEEP` | `300` | Seconds between checks |
+| `APP__TELEGRAM_API_KEY` | — | Telegram bot token |
+| `APP__TELEGRAM_CHAT_IDS` | — | Chat IDs to notify |
+| `APP__QUIET_MODE_ENABLED` | `false` | Suppress alerts during a window |
+| `APP__QUIET_MODE_START_HOUR` / `END_HOUR` | — | Quiet window (24h hours) |
 
-Create a .env file with values needed in your setup.
+Config is read once at startup from the process env — set these before running.
 
-```
-APP__LOG_LEVEL=debug
-APP__NOTIFIER_SLEEP=300
-APP__CURRENCIES=[{"ticker": "bitcoin","percentage_threshold": 2.0}, {"ticker": "ethereum","percentage_threshold": 2.0}]
-APP__TELEGRAM_API_KEY=<key>
-APP__TELEGRAM_CHAT_IDS=<id>
-APP__TELEGRAM_GET_UPDATES=false
-APP__QUIET_MODE_ENABLED=true
-APP__QUIET_MODE_START_HOUR=0
-APP__QUIET_MODE_END_HOUR=6
-```
+## Data sources
 
-## Running
+- [CoinGecko](https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true) — price + 24h volume
+- [bitdis.org](https://bitdis.org/api/live-data) — reachable Bitcoin nodes
+- [alternative.me](https://api.alternative.me/fng/) — Fear & Greed index
+- [colintalkscrypto](https://www.colintalkscrypto.com/cbbi/) — CBBI index
 
-### Native (Cargo)
+## Testing
 
-```bash
-cargo run --release
-```
+Integration-style tests live in `tests/`:
 
-### Docker
+- `tests/tests.rs` — declares `unit` and `helpers` modules
+- `tests/unit/` — unit tests for price-change detection, quiet-mode, the cache,
+  config defaults, and the notification formatter
+- `tests/helpers.rs` + `tests/data/` — fixture helpers for the network sources
 
-Build and run with Docker Compose:
-
-```bash
-docker compose up --build
-```
-
-Run in the background:
-
-```bash
-docker compose up --build -d
-```
-
-Stop the service:
-
-```bash
-docker compose down
-```
-
-View logs:
-
-```bash
-docker compose logs -f
-```
-
-#### Docker Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- A `.env` file in the project root (copy from `.env.example` and fill in your values)
-
-#### Docker Architecture
-
-The Dockerfile uses a multi-stage build:
-
-1. **Builder stage** — Compiles the Rust binary with full toolchain
-2. **Runtime stage** — Minimal Debian image with only the release binary
-
-The final image is ~50MB (vs ~1GB for a single-stage build).
-
-#### Docker Compose Configuration
-
-`docker-compose.yml` provides:
-
-- **Auto-restart** — Container restarts unless explicitly stopped
-- **Volume mount** — `.env` is mounted read-only for live config updates
-- **Resource limits** — CPU and memory limits to prevent runaway processes
-- **Health check** — Verifies the process is running every 30 seconds
-
-## Running Tests
-
-To run all tests:
+Run them with:
 
 ```bash
 cargo test
 ```
 
-To run tests for a specific module:
+## Build & run
 
 ```bash
-cargo test tests::coin_gecko
+# build
+cargo build
+
+# run (set env vars first)
+APP__TELEGRAM_API_KEY=... APP__TELEGRAM_CHAT_IDS=... cargo run
 ```
 
-## Test Structure
-
-Each test file contains:
-
-1. **Mock data structures** - Helper structs that generate mock API responses (defined in `mock_data.rs`)
-2. **Mock clients** - Helper structs that process mock data without making network calls
-3. **Test functions** - Individual test cases that verify the parsing logic
-
-## Mock Data Providers
-
-- **CoinGeckoMock** - Mocks CoinGecko API responses for cryptocurrency prices
-- **AlternativeMeMock** - Mocks Alternative.me Fear & Greed Index responses
-- **BitnodesMock** - Mocks Bitnodes.io node count responses
-- **CbbiMock** - Mocks ColinTalksCrypto CBBI responses
-
-## Shared Helpers
-
-- `../helpers.rs` - Test fixture loader that reads JSON files from `tests/data/`
-
-## Example Test
-
-```rust
-#[tokio::test]
-async fn test_get_ticker_with_mock() {
-    let mut mock = CoinGeckoMock::new();
-    mock.with_price("bitcoin", 65000);
-
-    let result = MockClient::get_ticker_mock("bitcoin", &mock).await;
-    assert!(result.is_some());
-    let data = result.unwrap();
-    let bitcoin_price = data.get("bitcoin").unwrap();
-    assert_eq!(bitcoin_price.usd, Some(65000));
-}
-```
-
-## Adding New Tests
-
-1. Add mock data to `mock_data.rs` if needed
-2. Create a new test file or add to existing test files
-3. Use `#[cfg(test)]` to ensure tests only compile in test mode
-4. Follow the pattern: mock data → mock client → test functions
+Or via Docker (`Dockerfile` installs `procps` for the healthcheck and runs
+tzdata non-interactively).
