@@ -24,3 +24,17 @@ fn format_price_notification_no_change() {
     let msg = format_price_notification("Bitcoin", &PriceChange::NoChange, 0.0, 100000.0);
     assert!(msg.contains("no change"));
 }
+
+#[test]
+fn bitcoin_detail_alert_suppresses_generic_alert() {
+    // Bitcoin gets a rich detail alert (24h vol, nodes, F&G, CBBI) that
+    // supersedes the generic price-move alert, so exactly one notification
+    // is sent for bitcoin.
+    assert!(cryptifier::notifier::suppress_generic_alert("bitcoin"));
+}
+
+#[test]
+fn non_bitcoin_tickers_get_generic_alert() {
+    assert!(!cryptifier::notifier::suppress_generic_alert("ethereum"));
+    assert!(!cryptifier::notifier::suppress_generic_alert("solana"));
+}
