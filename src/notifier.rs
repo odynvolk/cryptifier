@@ -17,6 +17,14 @@ pub fn to_upper_case(ticker: &str) -> String {
     }
 }
 
+/// Whether the generic price-move alert is suppressed for a ticker.
+/// Bitcoin gets a rich detail alert (24h vol, nodes, F&G index, CBBI) that
+/// supersedes the generic alert, so exactly one notification is sent for
+/// bitcoin. All other tickers get the generic alert.
+pub fn suppress_generic_alert(ticker: &str) -> bool {
+    ticker == "bitcoin"
+}
+
 pub fn price_change_as_text(change: &PriceChange) -> String {
     match change {
         PriceChange::Up => "🟢 <b>up</b>".to_string(),
@@ -41,7 +49,7 @@ pub fn format_price_notification(
     )
 }
 
-async fn get_and_notify(ticker: &str, percentage_threshold: f64) {
+async fn notify(ticker: &str, percentage_threshold: f64) {
     // Check if we're in quiet mode
     if is_quiet_mode_enabled() && is_quiet_hours() {
         logger::debug(&format!("Quiet mode: skipping notification for {}", ticker));
@@ -79,14 +87,16 @@ async fn get_and_notify(ticker: &str, percentage_threshold: f64) {
                     telegram::notify(ticker, &text).await;
                 }
 
-                let upper_case_ticker = to_upper_case(ticker);
-                let text = format_price_notification(
-                    &upper_case_ticker,
-                    &price_change,
-                    percent_change,
-                    display_price
-                );
-                telegram::notify(ticker, &text).await;
+                if !suppress_generic_alert(ticker) {
+                    let upper_case_ticker = to_upper_case(ticker);
+                    let text = format_price_notification(
+                        &upper_case_ticker,
+                        &price_change,
+                        percent_change,
+                        display_price
+                    );
+                    telegram::notify(ticker, &text).await;
+                }
             }
         }
     }
@@ -103,7 +113,7 @@ async fn run_once() {
         let ticker = currency.ticker.clone();
         let percentage_threshold = currency.percentage_threshold;
         set.spawn(async move {
-            get_and_notify(&ticker, percentage_threshold).await;
+            notify(&ticker, percentage_threshold).await;
         });
     }
 
