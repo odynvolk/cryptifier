@@ -1,9 +1,6 @@
-# Pins the Rust toolchain for rustup-based hosts (local dev, any clone without asdf).
-# Keep this version in sync with the `rust:` builder tag in the Dockerfile.
-#
-# Note: the Docker build does NOT copy this file into the image (it only copies
-# Cargo.toml, Cargo.lock and src/), so the Dockerfile's FROM tag is the
-# authoritative pin for container builds. Bump both together.
+# Single source of truth for the Rust version on rustup-based hosts; rustup
+# installs and switches to it automatically. The Dockerfile's `FROM rust:` tag is
+# the container-side pin (this file is not copied into the image). Bump the two together.
 [toolchain]
 channel = "1.95.0"
 components = ["rustfmt", "clippy"]
