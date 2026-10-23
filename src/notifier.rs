@@ -34,12 +34,7 @@ pub fn price_change_as_text(change: &PriceChange) -> String {
 }
 
 /// Builds the price-change notification body (pure, no I/O).
-pub fn format_price_notification(
-    ticker: &str,
-    change: &PriceChange,
-    percent_change: f64,
-    price: f64,
-) -> String {
+pub fn format_price_notification(ticker: &str, change: &PriceChange, percent_change: f64, price: f64) -> String {
     format!(
         "💰 <b>{}</b> is {} {:.2}%! ${}",
         ticker,
@@ -89,20 +84,14 @@ async fn notify(ticker: &str, percentage_threshold: f64) {
 
                 if !suppress_generic_alert(ticker) {
                     let upper_case_ticker = to_upper_case(ticker);
-                    let text = format_price_notification(
-                        &upper_case_ticker,
-                        &price_change,
-                        percent_change,
-                        display_price
-                    );
+                    let text =
+                        format_price_notification(&upper_case_ticker, &price_change, percent_change, display_price);
                     telegram::notify(ticker, &text).await;
                 }
             }
         }
     }
-
 }
-
 
 /// Runs a single iteration of price checking for all configured currencies.
 async fn run_once() {

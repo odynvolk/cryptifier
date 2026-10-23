@@ -1,0 +1,6 @@
+# Single source of truth for the Rust version on rustup-based hosts; rustup
+# installs and switches to it automatically. The Dockerfile's `FROM rust:` tag is
+# the container-side pin (this file is not copied into the image). Bump the two together.
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy"]

@@ -74,5 +74,9 @@ cargo build
 APP__TELEGRAM_API_KEY=... APP__TELEGRAM_CHAT_IDS=... cargo run
 ```
 
+Toolchain is pinned by `rust-toolchain.toml` — rustup installs and switches to it
+automatically. The `Dockerfile`'s `FROM rust:` tag is the container-side pin and
+must be bumped to match.
+
 Or via Docker (`Dockerfile` installs `procps` for the healthcheck and runs
 tzdata non-interactively).
