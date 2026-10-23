@@ -2,7 +2,12 @@
 # syntax=docker/dockerfile:1
 
 # ===== Stage 1: Build =====
-FROM rust:1.85-slim AS builder
+# Version kept in sync with rust-toolchain.toml (local dev toolchain).
+# The -bookworm variant is pinned deliberately: this stage's release binary is
+# copied into the debian:bookworm-slim runtime below, and a newer-glibc builder
+# (e.g. trixie) would produce a binary that fails at runtime. Do not float this
+# to the unpinned `-slim` tag, which can move between Debian releases.
+FROM rust:1.95.0-slim-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
