@@ -9,7 +9,7 @@ use std::future::Future;
 pub struct LogMessages {
     /// Logged on success, with the first `{}` replaced by the formatted result.
     pub success_log_msg: &'static str,
-    /// Logged when the raw response cannot be parsed.
+    /// Logged when the raw response cannot be parsed. No `{}` substitution, so keep this message brace-free.
     pub parse_error_msg: &'static str,
     /// Logged when the fetch fails, with the first `{}` replaced by the error.
     pub fetch_error_msg: &'static str,
