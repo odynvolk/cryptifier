@@ -1,6 +1,6 @@
 //! ColinTalksCrypto Bitcoin Bull/Bear Index (CBBI) API integration.
 use crate::cache::LONG_CACHE;
-use crate::cached_api::get_or_fetch_cached;
+use crate::cached_api::{get_or_fetch_cached, LogMessages};
 
 /// Available metrics used to calculate the CBBI.
 use crate::http::shared_client;
@@ -54,9 +54,11 @@ pub async fn get_cbbi() -> i64 {
         fetch_cbbi,
         parse_response,
         |data: CbbiData| data.index_value.to_string(),
-        "Got CBBI from colintalkscrypto.com {}%",
-        "Failed to parse CBBI response",
-        "Failed to get CBBI from colintalkscrypto.com: {}",
+        LogMessages {
+            success_log_msg: "Got CBBI from colintalkscrypto.com {}%",
+            parse_error_msg: "Failed to parse CBBI response",
+            fetch_error_msg: "Failed to get CBBI from colintalkscrypto.com: {}",
+        },
     )
     .await
     .parse::<i64>()

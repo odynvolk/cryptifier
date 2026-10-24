@@ -85,8 +85,7 @@ pub fn get_notifier_sleep() -> i64 {
     CONFIG.notifier_sleep.unwrap_or(300)
 }
 
-/// Returns the percentage threshold for a currency.
-
+/// Returns whether quiet mode is enabled.
 pub fn is_quiet_mode_enabled() -> bool {
     CONFIG.quiet_mode_enabled.unwrap_or(false)
 }
