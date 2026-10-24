@@ -1,6 +1,7 @@
 pub mod alternative_me_tests;
 pub mod bitdis_tests;
 pub mod cache_tests;
+pub mod cached_api_tests;
 pub mod cbbi_tests;
 pub mod coin_gecko_tests;
 pub mod config_tests;

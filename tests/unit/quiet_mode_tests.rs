@@ -3,31 +3,28 @@ use cryptifier::config::{get_quiet_mode_end_hour, get_quiet_mode_start_hour, is_
 
 #[tokio::test]
 async fn test_quiet_mode_enabled_value() {
-    // Test that quiet mode enabled value is parsed correctly from config
-    let enabled = is_quiet_mode_enabled();
-    // Value should be a valid boolean
-    assert!(enabled == true || enabled == false);
+    // Reading the flag must not panic; any bool is a valid value.
+    is_quiet_mode_enabled();
 }
 
 #[tokio::test]
 async fn test_quiet_mode_start_hour_value() {
     // Test that start hour value is within valid range
     let start_hour = get_quiet_mode_start_hour();
-    assert!(start_hour >= 0 && start_hour <= 23);
+    assert!((0..=23).contains(&start_hour));
 }
 
 #[tokio::test]
 async fn test_quiet_mode_end_hour_value() {
     // Test that end hour value is within valid range
     let end_hour = get_quiet_mode_end_hour();
-    assert!(end_hour >= 0 && end_hour <= 23);
+    assert!((0..=23).contains(&end_hour));
 }
 
 #[tokio::test]
 async fn test_quiet_mode_is_quiet_hours() {
-    // Test that is_quiet_hours returns a boolean
-    let result = is_quiet_hours();
-    assert!(result == true || result == false);
+    // Computing quiet hours from local time must not panic.
+    is_quiet_hours();
 }
 
 #[tokio::test]
@@ -39,12 +36,8 @@ async fn test_quiet_mode_config_values_valid() {
     let end_hour = get_quiet_mode_end_hour();
 
     // Start and end hours should be in valid range (0-23)
-    assert!(
-        start_hour >= 0 && start_hour <= 23,
-        "Start hour {} out of range",
-        start_hour
-    );
-    assert!(end_hour >= 0 && end_hour <= 23, "End hour {} out of range", end_hour);
+    assert!((0..=23).contains(&start_hour), "Start hour {} out of range", start_hour);
+    assert!((0..=23).contains(&end_hour), "End hour {} out of range", end_hour);
 
     // If quiet mode is enabled, start should typically be less than end
     // (unless it's a wrap-around midnight case)
@@ -75,14 +68,11 @@ async fn test_quiet_mode_parsing_from_env() {
     assert!(end_hour.is_some(), "Failed to parse APP__QUIET_MODE_END_HOUR");
 
     // Values should be in valid ranges
-    if let Some(e) = enabled {
-        assert!(e == true || e == false);
-    }
     if let Some(s) = start_hour {
-        assert!(s >= 0 && s <= 23, "Start hour {} out of range", s);
+        assert!((0..=23).contains(&s), "Start hour {} out of range", s);
     }
     if let Some(e) = end_hour {
-        assert!(e >= 0 && e <= 23, "End hour {} out of range", e);
+        assert!((0..=23).contains(&e), "End hour {} out of range", e);
     }
 }
 

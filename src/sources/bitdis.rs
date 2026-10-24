@@ -1,6 +1,6 @@
 //! Bitdis.org API integration for Bitcoin network statistics.
 use crate::cache::LONG_CACHE;
-use crate::cached_api::get_or_fetch_cached;
+use crate::cached_api::{get_or_fetch_cached, LogMessages};
 
 use crate::http::shared_client;
 #[derive(Debug, Clone)]
@@ -15,9 +15,11 @@ pub async fn get_bitdis() -> String {
         fetch_bitdis,
         parse_response,
         format_result,
-        "Found {} Bitcoin nodes from bitdis.org",
-        "Failed to parse bitdis response",
-        "Failed to get nodes from bitdis.org: {}",
+        LogMessages {
+            success_log_msg: "Found {} Bitcoin nodes from bitdis.org",
+            parse_error_msg: "Failed to parse bitdis response",
+            fetch_error_msg: "Failed to get nodes from bitdis.org: {}",
+        },
     )
     .await
 }
