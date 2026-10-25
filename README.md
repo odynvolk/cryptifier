@@ -6,9 +6,9 @@ measured change, not the threshold.
 
 ## What it does
 
-- Polls configured currencies (default: `bitcoin`, `ethereum`) every
-  `APP__NOTIFIER_SLEEP` seconds (default 300).
-- Computes the real percentage move between polls via `get_price_change`.
+- Checks configured currencies (default: `bitcoin`, `ethereum`), then sleeps
+  `APP__NOTIFIER_SLEEP` seconds (default 300) before the next check.
+- Computes the real percentage move between checks via `get_price_change`.
 - When the move exceeds a coin's `percentage_threshold`, it builds a message
   like `💰 <b>Bitcoin</b> is up 5.40%! $71000` and sends it to Telegram.
 - For `bitcoin`, the message also includes 24h volume, reachable Bitcoin nodes,
@@ -26,6 +26,7 @@ measured change, not the threshold.
 | `src/cache.rs` | Generic `Cache<T>` with TTL |
 | `src/cached_api.rs` | Wraps sources with short (10 min) / long (12 h) caches |
 | `src/http.rs` | Single shared `reqwest::Client` for all API calls |
+| `src/shutdown.rs` | `Shutdown` flag + `sleep_or_shutdown` — stops the loop between cycles |
 | `src/sources/` | CoinGecko, bitdis.org, alternative.me (F&G), colintalkscrypto (CBBI) |
 | `src/notifiers/telegram.rs` | Telegram bot: `notify(ticker, text)` |
 
@@ -34,13 +35,18 @@ measured change, not the threshold.
 | Var | Default | Purpose |
 |---|---|---|
 | `APP__CURRENCIES` | `[{"ticker":"bitcoin","percentage_threshold":2.0},{"ticker":"ethereum","percentage_threshold":2.0}]` | JSON list of coins + move threshold (%) |
-| `APP__NOTIFIER_SLEEP` | `300` | Seconds between checks |
+| `APP__NOTIFIER_SLEEP` | `300` | Seconds to sleep once a check has finished. Non-positive or unparseable falls back to `300`, reported at startup |
 | `APP__TELEGRAM_API_KEY` | — | Telegram bot token |
-| `APP__TELEGRAM_CHAT_IDS` | — | Chat IDs to notify |
+| `APP__TELEGRAM_CHAT_IDS` | — | Chat IDs to notify, comma-separated |
+| `APP__TELEGRAM_GET_UPDATES` | `false` | Also discover chat IDs from Telegram `getUpdates` (cached 10 min) |
 | `APP__QUIET_MODE_ENABLED` | `false` | Suppress alerts during a window |
-| `APP__QUIET_MODE_START_HOUR` / `END_HOUR` | — | Quiet window (24h hours) |
+| `APP__QUIET_MODE_START_HOUR` / `END_HOUR` | `0` / `6` | Quiet window (24h hours); equal hours means all day |
+| `APP__LOG_LEVEL` | `info` | Any `EnvFilter` directives (e.g. `debug`). Blank or invalid falls back to `info` |
 
 Config is read once at startup from the process env — set these before running.
+Startup then logs what is genuinely in effect: the `.env` path tried, the log
+level, and the notifier sleep. A rejected sleep is an ERROR line; a rejected log
+level only shows up here as `Log level: info`.
 
 ## Data sources
 
@@ -55,7 +61,8 @@ Integration-style tests live in `tests/`:
 
 - `tests/tests.rs` — declares `unit` and `helpers` modules
 - `tests/unit/` — unit tests for price-change detection, quiet-mode, the cache,
-  config defaults, and the notification formatter
+  config defaults, the notification formatter, log-level resolution, and the
+  shutdown flag
 - `tests/helpers.rs` + `tests/data/` — fixture helpers for the network sources
 
 Run them with:
@@ -80,3 +87,19 @@ must be bumped to match.
 
 Or via Docker (`Dockerfile` installs `procps` for the healthcheck and runs
 tzdata non-interactively).
+
+## Stopping the service
+
+Send `SIGTERM` (`docker stop`) or `SIGINT` (Ctrl+C). The cycle in flight is
+allowed to finish — the loop only stops **between** cycles, so no price check or
+Telegram send is cancelled half-way — and the process then exits `0`.
+
+Draining takes real time. A worst-case cycle burns ~30 s of HTTP timeouts:
+CoinGecko 5 s, the bitcoin sources' `join!` 10 s, then Telegram's `getUpdates`
+5 s plus 5 s per chat id, sent one after another. `docker-compose.yml` therefore
+sets `stop_grace_period: 45s`; without it Docker kills the container at its 10 s
+default and the exit code is `137`. Compose only — a container started with a
+plain `docker run` needs `docker stop -t 45 <name>` instead.
+
+A second signal during the drain is not observed: the wait either finishes or it
+is killed.
