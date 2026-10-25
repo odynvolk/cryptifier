@@ -14,7 +14,9 @@ pub struct CurrencyConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AppConfig {
     pub log_level: Option<String>,
-    pub notifier_sleep: Option<i64>,
+    /// Resolved, never the raw config: the loop and the startup log must read the
+    /// same number an unusable value was corrected to.
+    pub notifier_sleep: NotifierSleep,
     pub telegram_api_key: Option<String>,
     pub telegram_chat_ids: Option<String>,
     pub telegram_get_updates: Option<bool>,
@@ -28,7 +30,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             log_level: Some("info".to_string()),
-            notifier_sleep: Some(300),
+            notifier_sleep: NotifierSleep::default(),
             telegram_api_key: None,
             telegram_chat_ids: None,
             telegram_get_updates: Some(false),
@@ -48,12 +50,21 @@ const DEFAULT_NOTIFIER_SLEEP: i64 = 300;
 
 /// Outcome of resolving `APP__NOTIFIER_SLEEP`: the seconds actually slept, plus
 /// the configured text when it was set but could not be used.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NotifierSleep {
     /// Seconds the loop sleeps after each cycle. Always positive.
     pub seconds: i64,
     /// The rejected value, for surfacing at startup instead of being swallowed.
     pub rejected: Option<String>,
+}
+
+impl Default for NotifierSleep {
+    fn default() -> Self {
+        Self {
+            seconds: DEFAULT_NOTIFIER_SLEEP,
+            rejected: None,
+        }
+    }
 }
 
 /// Resolves the sleep from an arbitrary env lookup, so every fallback branch is
@@ -98,7 +109,7 @@ fn lookup_var(key: &str) -> Result<String, env::VarError> {
 
 /// The notifier sleep actually in effect, for the loop and the startup log.
 pub fn effective_notifier_sleep() -> NotifierSleep {
-    resolve_notifier_sleep(lookup_var)
+    CONFIG.notifier_sleep.clone()
 }
 
 /// Global application configuration.
@@ -125,9 +136,7 @@ pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
     logger::debug(&format!("Loaded currencies: {:?}", currencies));
     AppConfig {
         log_level: env::var("APP__LOG_LEVEL").ok(),
-        // Kept in sync with `get_notifier_sleep()` so the struct never disagrees
-        // with what the loop sleeps or the startup log prints.
-        notifier_sleep: Some(get_notifier_sleep()),
+        notifier_sleep: resolve_notifier_sleep(lookup_var),
         telegram_api_key: env::var("APP__TELEGRAM_API_KEY").ok(),
         telegram_chat_ids: env::var("APP__TELEGRAM_CHAT_IDS").ok(),
         telegram_get_updates: env::var("APP__TELEGRAM_GET_UPDATES").ok().and_then(|s| s.parse().ok()),
@@ -145,7 +154,7 @@ pub fn get_currencies() -> Vec<CurrencyConfig> {
 
 /// Returns the notifier sleep interval in seconds, always positive.
 pub fn get_notifier_sleep() -> i64 {
-    effective_notifier_sleep().seconds
+    CONFIG.notifier_sleep.seconds
 }
 
 /// Returns whether quiet mode is enabled.
