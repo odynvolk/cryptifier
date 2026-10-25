@@ -124,6 +124,8 @@ pub async fn run(shutdown: Shutdown) {
         logger::info(&format!("Quiet mode enabled: {} - {}", start, end));
     }
 
+    // Already resolved: never 0 (a zero sleep is no delay at all) and never
+    // negative, which would wrap through `as u64` to an unreachable future.
     let sleep_seconds = get_notifier_sleep() as u64;
 
     loop {

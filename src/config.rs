@@ -40,6 +40,67 @@ impl Default for AppConfig {
     }
 }
 
+/// Env var holding the seconds to sleep between check cycles.
+const NOTIFIER_SLEEP_VAR: &str = "APP__NOTIFIER_SLEEP";
+
+/// Seconds slept when `APP__NOTIFIER_SLEEP` is unset or unusable.
+const DEFAULT_NOTIFIER_SLEEP: i64 = 300;
+
+/// Outcome of resolving `APP__NOTIFIER_SLEEP`: the seconds actually slept, plus
+/// the configured text when it was set but could not be used.
+#[derive(Debug, PartialEq, Eq)]
+pub struct NotifierSleep {
+    /// Seconds the loop sleeps after each cycle. Always positive.
+    pub seconds: i64,
+    /// The rejected value, for surfacing at startup instead of being swallowed.
+    pub rejected: Option<String>,
+}
+
+/// Resolves the sleep from an arbitrary env lookup, so every fallback branch is
+/// testable without mutating process env (`set_var` is disallowed by
+/// `.clippy.toml`).
+///
+/// A non-positive or unparseable value falls back to `DEFAULT_NOTIFIER_SLEEP`
+/// rather than being clamped small. A 0 sleep is no delay at all, a negative one
+/// wraps through `as u64` and parks the loop forever, and every cycle makes four
+/// external GETs plus a Telegram send — so clamping to `1` would turn a typo
+/// into a fast poll of public endpoints.
+pub fn resolve_notifier_sleep(lookup: fn(&str) -> Result<String, env::VarError>) -> NotifierSleep {
+    let configured = lookup(NOTIFIER_SLEEP_VAR)
+        .ok()
+        .map(|raw| raw.trim().to_string())
+        // A key left with no value is not a value — same rule the log level uses.
+        .filter(|raw| !raw.is_empty());
+
+    let usable = configured
+        .as_deref()
+        .and_then(|raw| raw.parse::<i64>().ok())
+        .filter(|seconds| *seconds > 0);
+
+    match usable {
+        Some(seconds) => NotifierSleep {
+            seconds,
+            rejected: None,
+        },
+        // Report the configured text, never the fallback, or the operator sees
+        // 300 twice and concludes the config arrived.
+        None => NotifierSleep {
+            seconds: DEFAULT_NOTIFIER_SLEEP,
+            rejected: configured,
+        },
+    }
+}
+
+/// Reads a var with the exact signature `resolve_notifier_sleep` expects.
+fn lookup_var(key: &str) -> Result<String, env::VarError> {
+    env::var(key)
+}
+
+/// The notifier sleep actually in effect, for the loop and the startup log.
+pub fn effective_notifier_sleep() -> NotifierSleep {
+    resolve_notifier_sleep(lookup_var)
+}
+
 /// Global application configuration.
 pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
     let currencies_str = env::var("APP__CURRENCIES").unwrap_or_else(|_| {
@@ -64,7 +125,9 @@ pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
     logger::debug(&format!("Loaded currencies: {:?}", currencies));
     AppConfig {
         log_level: env::var("APP__LOG_LEVEL").ok(),
-        notifier_sleep: env::var("APP__NOTIFIER_SLEEP").ok().and_then(|s| s.parse().ok()),
+        // Kept in sync with `get_notifier_sleep()` so the struct never disagrees
+        // with what the loop sleeps or the startup log prints.
+        notifier_sleep: Some(get_notifier_sleep()),
         telegram_api_key: env::var("APP__TELEGRAM_API_KEY").ok(),
         telegram_chat_ids: env::var("APP__TELEGRAM_CHAT_IDS").ok(),
         telegram_get_updates: env::var("APP__TELEGRAM_GET_UPDATES").ok().and_then(|s| s.parse().ok()),
@@ -80,9 +143,9 @@ pub fn get_currencies() -> Vec<CurrencyConfig> {
     CONFIG.currencies.clone().unwrap_or_default()
 }
 
-/// Returns the notifier sleep interval in seconds.
+/// Returns the notifier sleep interval in seconds, always positive.
 pub fn get_notifier_sleep() -> i64 {
-    CONFIG.notifier_sleep.unwrap_or(300)
+    effective_notifier_sleep().seconds
 }
 
 /// Returns whether quiet mode is enabled.

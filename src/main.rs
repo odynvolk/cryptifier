@@ -78,7 +78,19 @@ fn log_startup_config(dotenv_outcome: &DotenvOutcome) {
     }
 
     logger::info(&format!("Log level: {}", logger::effective_log_level()));
-    logger::info(&format!("Notifier sleep: {}s", config::get_notifier_sleep()));
+
+    // The loop sleeps this same resolved value, so the number printed here is
+    // the number in effect even when the configured one was discarded.
+    let notifier_sleep = config::effective_notifier_sleep();
+    if let Some(configured) = &notifier_sleep.rejected {
+        // ERROR, not INFO: the loop would otherwise have spun with no delay at
+        // all (or never woken again), and a recovered typo is still a typo.
+        logger::error(&format!(
+            "Ignoring APP__NOTIFIER_SLEEP='{configured}', which is not a positive number of seconds; using {}s",
+            notifier_sleep.seconds
+        ));
+    }
+    logger::info(&format!("Notifier sleep: {}s", notifier_sleep.seconds));
 }
 
 /// Waits for the first shutdown signal and returns its name, so the log says
