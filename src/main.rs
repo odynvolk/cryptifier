@@ -4,6 +4,7 @@ use cryptifier::logger;
 use cryptifier::notifier;
 use cryptifier::shutdown::Shutdown;
 use std::path::Path;
+use std::time::Duration;
 
 fn main() {
     // Load .env if present. Whether it was found is reported once the logger is
@@ -60,8 +61,10 @@ fn log_startup_config(env_path: &Path, dotenv_result: &Result<(), dotenvy::Error
 #[cfg(unix)]
 async fn wait_for_signal() -> &'static str {
     match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+        // Routed through the same helper as the fallback, so an uninstallable
+        // Ctrl+C handler cannot complete this arm and trigger a false shutdown.
         Ok(mut terminate) => tokio::select! {
-            _ = tokio::signal::ctrl_c() => "SIGINT (Ctrl+C)",
+            _ = wait_for_ctrl_c() => "SIGINT (Ctrl+C)",
             _ = terminate.recv() => "SIGTERM",
         },
         // Cannot observe SIGTERM on this host; Ctrl+C is all we have.
@@ -76,7 +79,13 @@ async fn wait_for_signal() -> &'static str {
 }
 
 async fn wait_for_ctrl_c() -> &'static str {
-    // Errors only if the process-wide handler cannot be installed; keep running.
-    let _ = tokio::signal::ctrl_c().await;
-    "SIGINT (Ctrl+C)"
+    // An Err means the process-wide handler could not be installed, not that a
+    // signal arrived. Returning here would be read as a real signal and shut the
+    // service down at startup, so back off and keep waiting instead.
+    loop {
+        match tokio::signal::ctrl_c().await {
+            Ok(()) => return "SIGINT (Ctrl+C)",
+            Err(_) => tokio::time::sleep(Duration::from_secs(1)).await,
+        }
+    }
 }
