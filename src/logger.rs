@@ -7,7 +7,8 @@ use tracing_subscriber::prelude::*;
 /// Env var holding the level filter directives.
 const LOG_LEVEL_VAR: &str = "APP__LOG_LEVEL";
 
-/// Filter installed when `APP__LOG_LEVEL` is unset or is not valid directives.
+/// Filter installed when `APP__LOG_LEVEL` is unset, blank, or not valid
+/// directives.
 const DEFAULT_LOG_LEVEL: &str = "info";
 
 fn local_time_timer(buf: &mut tracing_subscriber::fmt::format::Writer) -> Result<(), std::fmt::Error> {
@@ -15,14 +16,20 @@ fn local_time_timer(buf: &mut tracing_subscriber::fmt::format::Writer) -> Result
     buf.write_fmt(format_args!("{}", local.format("%H:%M:%S")))
 }
 
-/// Resolves the level filter from an arbitrary env lookup, so both branches are
+/// Resolves the level filter from an arbitrary env lookup, so every branch is
 /// testable without mutating the real process environment.
 pub fn resolve_log_level(lookup: fn(&str) -> Result<String, env::VarError>) -> String {
     lookup(LOG_LEVEL_VAR)
         .ok()
-        // Garbage must not be reported as if it were in effect — `init` would
-        // fall back, so this resolves to the same thing it installs.
-        .filter(|directives| tracing_subscriber::EnvFilter::try_new(directives).is_ok())
+        // Two reasons to reject a value here, neither of them safety: an
+        // invalid one is not rejected by `init` at all (`EnvFilter::new` is
+        // `parse_lossy`), so a different filter would be installed than the
+        // level reported at startup; and an empty one parses to no directives,
+        // which makes `new` add its ERROR default and silence every startup
+        // line — including the one reporting this value.
+        .filter(|directives| {
+            !directives.trim().is_empty() && tracing_subscriber::EnvFilter::try_new(directives).is_ok()
+        })
         .unwrap_or_else(|| DEFAULT_LOG_LEVEL.to_string())
 }
 
@@ -37,7 +44,8 @@ pub fn effective_log_level() -> String {
 }
 
 pub fn init() {
-    // Already validated by `resolve_log_level`, so `new` cannot panic here.
+    // `new` cannot panic either way — it is `parse_lossy` — so the validation
+    // above is what makes this filter match the level reported at startup.
     let env_filter = tracing_subscriber::EnvFilter::new(effective_log_level());
 
     tracing_subscriber::registry()
