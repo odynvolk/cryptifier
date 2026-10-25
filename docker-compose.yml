@@ -7,6 +7,10 @@ services:
       dockerfile: Dockerfile
     container_name: cryptifier
     restart: unless-stopped
+    # Shutdown only stops between cycles, and a worst-case cycle burns ~30 s of
+    # API timeouts. Compose's 10 s default would SIGKILL that mid-cycle.
+    # Not honoured by a bare `docker run` — that needs `docker stop -t 45`.
+    stop_grace_period: 45s
     environment:
       - TZ=Europe/Berlin
     env_file:
