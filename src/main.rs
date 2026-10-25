@@ -1,15 +1,20 @@
 //! Main entry point for the Cryptifier application.
+use cryptifier::config;
 use cryptifier::logger;
 use cryptifier::notifier;
 use cryptifier::shutdown::Shutdown;
+use std::path::Path;
 
 fn main() {
-    // Load environment variables from .env file (ignored if the file is absent).
+    // Load .env if present. Whether it was found is reported once the logger is
+    // up — a silently skipped file used to look exactly like a hang.
     let env_path = std::env::current_dir().unwrap().join(".env");
-    let _ = dotenvy::from_path(&env_path);
+    let dotenv_result = dotenvy::from_path(&env_path);
 
+    // Must stay after the dotenv load so APP__LOG_LEVEL from the file is honoured.
     logger::init();
     logger::info("Cryptifier starting...");
+    log_startup_config(&env_path, &dotenv_result);
 
     tokio::runtime::Runtime::new().unwrap().block_on(async {
         let shutdown = Shutdown::new();
@@ -28,6 +33,26 @@ fn main() {
     });
 
     logger::info("Cryptifier stopped.");
+}
+
+/// Reports the configuration that is genuinely in effect, so a config that did
+/// not arrive is visible at a glance instead of inferred from later log lines.
+fn log_startup_config(env_path: &Path, dotenv_result: &Result<(), dotenvy::Error>) {
+    match dotenv_result {
+        Ok(()) => logger::info(&format!("Loaded .env from {}", env_path.display())),
+        // Deliberately INFO, not WARNING: the image ships only .env.example and
+        // compose hands config over as real process env vars, so this is the
+        // normal container startup and must not look like a fault.
+        Err(err) if err.not_found() => logger::info(&format!(
+            "No .env file at {}; using process environment",
+            env_path.display()
+        )),
+        // A file that is there but unusable is the one case that is genuinely wrong.
+        Err(err) => logger::error(&format!("Ignoring unreadable .env at {}: {err}", env_path.display())),
+    }
+
+    logger::info(&format!("Log level: {}", logger::effective_log_level()));
+    logger::info(&format!("Notifier sleep: {}s", config::get_notifier_sleep()));
 }
 
 /// Waits for the first shutdown signal and returns its name, so the log says

@@ -5,6 +5,7 @@ pub mod cached_api_tests;
 pub mod cbbi_tests;
 pub mod coin_gecko_tests;
 pub mod config_tests;
+pub mod logger_tests;
 pub mod notifier_tests;
 pub mod price_change_tests;
 pub mod quiet_mode_tests;
