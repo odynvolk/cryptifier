@@ -7,9 +7,14 @@ services:
       dockerfile: Dockerfile
     container_name: cryptifier
     restart: unless-stopped
-    # Shutdown only stops between cycles, and a worst-case cycle burns ~30 s of
-    # API timeouts. Compose's 10 s default would SIGKILL that mid-cycle.
-    # Not honoured by a bare `docker run` — that needs `docker stop -t 45`.
+    # Shutdown only stops between cycles, so this must cover a worst-case cycle.
+    # Budget: CoinGecko 5s + the bitcoin sources' join! 10s + Telegram
+    # getUpdates 5s (only on a >10 min cache miss) + 5s for the sends = ~25s.
+    # Independent of chat ID count, because telegram::notify runs the sends
+    # concurrently — it used to await them one at a time at 5s each, which made
+    # this number a function of APP__TELEGRAM_CHAT_IDS. Re-check it if any
+    # per-request timeout changes. Compose's 10s default would SIGKILL a cycle
+    # mid-drain; a bare `docker run` needs `docker stop -t 45` instead.
     stop_grace_period: 45s
     environment:
       - TZ=Europe/Berlin

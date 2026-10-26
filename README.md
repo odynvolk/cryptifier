@@ -94,12 +94,16 @@ Send `SIGTERM` (`docker stop`) or `SIGINT` (Ctrl+C). The cycle in flight is
 allowed to finish — the loop only stops **between** cycles, so no price check or
 Telegram send is cancelled half-way — and the process then exits `0`.
 
-Draining takes real time. A worst-case cycle burns ~30 s of HTTP timeouts:
-CoinGecko 5 s, the bitcoin sources' `join!` 10 s, then Telegram's `getUpdates`
-5 s plus 5 s per chat id, sent one after another. `docker-compose.yml` therefore
-sets `stop_grace_period: 45s`; without it Docker kills the container at its 10 s
+Draining takes real time. A worst-case cycle burns ~25 s of HTTP timeouts:
+CoinGecko 5 s, the bitcoin sources' `join!` 10 s, Telegram's `getUpdates` 5 s (only
+on a cache older than 10 min), then 5 s for the messages — sent concurrently, so
+the count of chat IDs does not add to it. `docker-compose.yml` therefore sets
+`stop_grace_period: 45s`; without it Docker kills the container at its 10 s
 default and the exit code is `137`. Compose only — a container started with a
 plain `docker run` needs `docker stop -t 45 <name>` instead.
+
+Re-check that budget if any per-request timeout changes; it is derived, not
+measured.
 
 A second signal during the drain is not observed: the wait either finishes or it
 is killed.

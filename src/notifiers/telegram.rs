@@ -2,17 +2,27 @@
 use crate::cache::SHORT_CACHE;
 use crate::config::CONFIG;
 use crate::logger;
-use std::future::Future;
-use std::pin::Pin;
 
 /// Retrieves chat IDs from the application configuration.
 use crate::http::shared_client;
 async fn get_chat_ids_from_config() -> Vec<String> {
-    CONFIG
+    let configured = CONFIG
         .telegram_chat_ids
         .as_ref()
-        .map(|ids| ids.split(',').map(|s| s.to_string()).collect())
-        .unwrap_or_default()
+        .map(|ids| {
+            ids.split(',')
+                .map(|id| id.trim())
+                .filter(|id| !id.is_empty())
+                .map(|id| id.to_string())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    // Duplicated IDs would now go out concurrently, which risks Telegram's
+    // roughly-one-message-per-second-per-chat limit rather than merely wasting a
+    // slow retry the way the old sequential loop did.
+    let mut seen = std::collections::HashSet::new();
+    configured.into_iter().filter(|id| seen.insert(id.clone())).collect()
 }
 
 /// Retrieves chat IDs from configuration or auto-discovers them from Telegram.
@@ -105,31 +115,34 @@ async fn send_text(chat_id: &str, text: &str) -> Result<(), reqwest::Error> {
 
 /// Sends a notification to all configured Telegram chat IDs.
 pub async fn notify(ticker: &str, text: &str) -> bool {
-    match get_chat_ids().await {
-        chat_ids if chat_ids.is_empty() => false,
-        chat_ids => {
-            let texts_to_send: Vec<_> = chat_ids
-                .iter()
-                .map(|chat_id| {
-                    Box::pin(send_text(chat_id, text))
-                        as Pin<Box<dyn Future<Output = Result<(), reqwest::Error>> + Send>>
-                })
-                .collect();
+    let chat_ids = get_chat_ids().await;
+    if chat_ids.is_empty() {
+        return false;
+    }
 
-            let mut success_count = 0;
-            for future in texts_to_send {
-                if future.await.is_ok() {
-                    success_count += 1;
-                }
-            }
+    // Deliberately concurrent. Awaiting each send one at a time made a cycle
+    // cost 5 s per chat ID, so the drain window had to grow with a config value;
+    // see the budget recorded in `docker-compose.yml`.
+    let mut set = tokio::task::JoinSet::new();
+    for chat_id in chat_ids {
+        let text = text.to_string();
+        set.spawn(async move { send_text(&chat_id, &text).await });
+    }
 
-            if success_count > 0 {
-                logger::info(format!("Notified {} users about {}", success_count, ticker).as_str());
-                true
-            } else {
-                logger::error("Failed to notify users of price change!");
-                false
-            }
+    // Every send is still awaited before returning, so a cycle never leaves work
+    // running behind it — the concurrent part is only when they overlap.
+    let mut success_count = 0;
+    while let Some(result) = set.join_next().await {
+        if matches!(&result, Ok(Ok(()))) {
+            success_count += 1;
         }
+    }
+
+    if success_count > 0 {
+        logger::info(format!("Notified {} users about {}", success_count, ticker).as_str());
+        true
+    } else {
+        logger::error("Failed to notify users of price change!");
+        false
     }
 }
