@@ -3,10 +3,16 @@ use std::time::Duration;
 
 /// Backstop timeout for call sites that set no per-request `.timeout()` of their
 /// own. Every current call site is tuned tighter (5s / 10s), so this only bites
-/// on future code that forgets to. Kept loose on purpose so it never silently
-/// tightens a deliberately tuned request, and still far below the 300s default
-/// notifier interval so one stuck call cannot stall a whole cycle.
-const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+/// on future code that forgets to.
+///
+/// Sized to the slowest deliberate request (the bitcoin sources' 10 s `join!`),
+/// not left loose. That keeps a single untimed call inside the drain budget
+/// derived in `docker-compose.yml`; at 30 s it alone exceeded the ~25 s a cycle
+/// is allowed and would have put graceful shutdown back to exit 137.
+///
+/// Any new call site should still set its own `.timeout()` — this is a net, not
+/// a tuning target. Re-check both against the budget if any timeout changes.
+const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Fail fast on an unreachable host instead of burning the whole request budget
 /// waiting for a TCP connection. This container is capped at 0.25 CPUs / 64 MB,

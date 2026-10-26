@@ -10,3 +10,4 @@ pub mod notifier_tests;
 pub mod price_change_tests;
 pub mod quiet_mode_tests;
 pub mod shutdown_tests;
+pub mod telegram_tests;
