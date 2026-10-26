@@ -48,6 +48,20 @@ const NOTIFIER_SLEEP_VAR: &str = "APP__NOTIFIER_SLEEP";
 /// Seconds slept when `APP__NOTIFIER_SLEEP` is unset or unusable.
 const DEFAULT_NOTIFIER_SLEEP: i64 = 300;
 
+/// Smallest usable interval. Zero is no delay at all, which would poll back to
+/// back.
+pub const MIN_NOTIFIER_SLEEP: i64 = 1;
+
+/// Largest usable interval — one day. A background price watcher has no reason
+/// to wait longer, and a stray zero (300 -> 30000000) would otherwise stop
+/// monitoring for about a year while the startup log printed the number as if it
+/// were intended. At the extreme it reaches `Duration::from_secs` and the tokio
+/// timer, which panics rather than parking: `Sleep::poll` is
+/// `Err(e) => panic!("timer error: {e}")` for "timer duration exceeds maximum
+/// duration", and tokio's own `far_future()` is only ~30 years because further
+/// out "overflows on macOS".
+pub const MAX_NOTIFIER_SLEEP: i64 = 86_400;
+
 /// Outcome of resolving `APP__NOTIFIER_SLEEP`: the seconds actually slept, plus
 /// the configured text when it was set but could not be used.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -71,22 +85,32 @@ impl Default for NotifierSleep {
 /// testable without mutating process env (`set_var` is disallowed by
 /// `.clippy.toml`).
 ///
-/// A non-positive or unparseable value falls back to `DEFAULT_NOTIFIER_SLEEP`
-/// rather than being clamped small. A 0 sleep is no delay at all, a negative one
-/// wraps through `as u64` and parks the loop forever, and every cycle makes four
-/// external GETs plus a Telegram send — so clamping to `1` would turn a typo
-/// into a fast poll of public endpoints.
+/// Anything outside `MIN_NOTIFIER_SLEEP..=MAX_NOTIFIER_SLEEP`, or unparseable,
+/// falls back to `DEFAULT_NOTIFIER_SLEEP` rather than being clamped to a bound.
+/// A 0 sleep is no delay at all, a negative one wraps through `as u64` and parks
+/// the loop forever, and every cycle makes four external GETs plus a Telegram
+/// send — so clamping to `1` would turn a typo into a fast poll of public
+/// endpoints. The upper end is rejected for the same reason in the other
+/// direction: degrade to something sane, not merely to something in range.
 pub fn resolve_notifier_sleep(lookup: fn(&str) -> Result<String, env::VarError>) -> NotifierSleep {
-    let configured = lookup(NOTIFIER_SLEEP_VAR)
-        .ok()
-        .map(|raw| raw.trim().to_string())
-        // A key left with no value is not a value — same rule the log level uses.
-        .filter(|raw| !raw.is_empty());
+    let configured = match lookup(NOTIFIER_SLEEP_VAR) {
+        Ok(raw) => {
+            let raw = raw.trim().to_string();
+            // A key left with no value is not a value — same rule the log level uses.
+            (!raw.is_empty()).then_some(raw)
+        }
+        Err(env::VarError::NotPresent) => None,
+        // Set but not readable as text is still a config the operator got wrong.
+        // Folding it into `NotPresent` would leave `rejected` empty and swallow
+        // it, which is the opposite of what this type exists for. The
+        // placeholder never parses, so the branches below already handle it.
+        Err(env::VarError::NotUnicode(_)) => Some("<not valid UTF-8>".to_string()),
+    };
 
     let usable = configured
         .as_deref()
         .and_then(|raw| raw.parse::<i64>().ok())
-        .filter(|seconds| *seconds > 0);
+        .filter(|seconds| (MIN_NOTIFIER_SLEEP..=MAX_NOTIFIER_SLEEP).contains(seconds));
 
     match usable {
         Some(seconds) => NotifierSleep {

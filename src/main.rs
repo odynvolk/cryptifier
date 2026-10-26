@@ -84,9 +84,13 @@ fn log_startup_config(dotenv_outcome: &DotenvOutcome) {
     let notifier_sleep = config::effective_notifier_sleep();
     if let Some(configured) = &notifier_sleep.rejected {
         // ERROR, not INFO: the loop would otherwise have spun with no delay at
-        // all (or never woken again), and a recovered typo is still a typo.
+        // all, never woken again, or slept for about a year — and a recovered
+        // typo is still a typo. Keeps running, because a wrong interval is not a
+        // reason to stop monitoring.
         logger::error(&format!(
-            "Ignoring APP__NOTIFIER_SLEEP='{configured}', which is not a positive number of seconds; using {}s",
+            "Ignoring APP__NOTIFIER_SLEEP='{configured}': not a whole number of seconds within {}..{}. Using {}s.",
+            config::MIN_NOTIFIER_SLEEP,
+            config::MAX_NOTIFIER_SLEEP,
             notifier_sleep.seconds
         ));
     }

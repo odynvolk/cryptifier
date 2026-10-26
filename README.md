@@ -35,7 +35,7 @@ measured change, not the threshold.
 | Var | Default | Purpose |
 |---|---|---|
 | `APP__CURRENCIES` | `[{"ticker":"bitcoin","percentage_threshold":2.0},{"ticker":"ethereum","percentage_threshold":2.0}]` | JSON list of coins + move threshold (%) |
-| `APP__NOTIFIER_SLEEP` | `300` | Seconds to sleep once a check has finished. Non-positive or unparseable falls back to `300`, reported at startup |
+| `APP__NOTIFIER_SLEEP` | `300` | Seconds to sleep once a check has finished. Seconds to sleep once a check has finished. Anything outside `1` to `86400` (a day), or unparseable, falls back to `300` and is reported at startup as an error |
 | `APP__TELEGRAM_API_KEY` | — | Telegram bot token |
 | `APP__TELEGRAM_CHAT_IDS` | — | Chat IDs to notify, comma-separated |
 | `APP__TELEGRAM_GET_UPDATES` | `false` | Also discover chat IDs from Telegram `getUpdates` (cached 10 min) |
