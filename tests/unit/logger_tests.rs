@@ -25,6 +25,40 @@ fn log_level_uses_the_configured_value() {
 }
 
 #[test]
+fn log_level_accepts_a_bare_off() {
+    // The one bare level that turns everything off is still a deliberate choice.
+    assert_eq!(directives(|_| Ok("off".to_string())), "off");
+}
+
+#[test]
+fn log_level_keeps_multi_directive_values() {
+    // The per-part check splits on `,`, so it could have rejected combinations
+    // that used to work. Listed rather than looped: `resolve_log_level` takes a
+    // `fn` pointer, so a loop variable cannot be captured.
+    assert_eq!(
+        directives(|_| Ok("info,cryptifier=debug".to_string())),
+        "info,cryptifier=debug"
+    );
+    assert_eq!(directives(|_| Ok("debug,warn".to_string())), "debug,warn");
+    assert_eq!(
+        directives(|_| Ok("cryptifier=debug,off".to_string())),
+        "cryptifier=debug,off"
+    );
+    assert_eq!(directives(|_| Ok("warn,[span]=trace".to_string())), "warn,[span]=trace");
+    // Space after the comma, which the per-part trim has to tolerate.
+    assert_eq!(directives(|_| Ok("info, debug".to_string())), "info, debug");
+}
+
+#[test]
+fn log_level_rejects_a_typo_inside_a_multi_directive_value() {
+    // The per-part check has to apply to every part, or a typo hidden behind a
+    // valid first directive installs a filter matching nothing.
+    let resolved = resolve_log_level(|_| Ok("info,deubg".to_string()));
+    assert_eq!(resolved.directives, "info");
+    assert_eq!(resolved.rejected.as_deref(), Some("info,deubg"));
+}
+
+#[test]
 fn log_level_falls_back_when_the_configured_value_is_not_a_filter() {
     // `new` would install an ERROR-only filter for this, so reporting it
     // verbatim would be a lie about what is in effect.

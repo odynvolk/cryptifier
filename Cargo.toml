@@ -24,6 +24,10 @@ chrono = { version = "0.4", features = ["serde"] }
 
 [dev-dependencies]
 mockito = "1.0"
+# tokio's `full` deliberately excludes `test-util`, and the shutdown tests need
+# paused virtual time to assert exact durations without spending real ones.
+# Test-only: `cargo build` does not compile dev-dependencies.
+tokio = { version = "1", features = ["test-util"] }
 
 [profile.release]
 lto = true
