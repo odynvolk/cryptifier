@@ -4,10 +4,12 @@ use crate::config::{get_currencies, get_notifier_sleep, is_quiet_hours, is_quiet
 use crate::get_price_change::get_price_change;
 use crate::logger;
 use crate::notifiers::telegram;
+use crate::shutdown::{sleep_or_shutdown, Shutdown};
 use crate::sources::alternative_me;
 use crate::sources::bitdis;
 use crate::sources::cbbi;
 use crate::sources::coin_gecko;
+use std::time::Duration;
 
 pub fn to_upper_case(ticker: &str) -> String {
     let mut chars = ticker.chars();
@@ -109,7 +111,10 @@ async fn run_once() {
     set.join_all().await;
 }
 /// Main entry point for the notification service.
-pub async fn run() {
+///
+/// Runs until `shutdown` is requested, and only ever stops between iterations so
+/// the work spawned by `run_once()` is never cancelled half-done.
+pub async fn run(shutdown: Shutdown) {
     let currencies = get_currencies();
     logger::info(&format!("{} currencies defined.", currencies.len()));
 
@@ -119,11 +124,17 @@ pub async fn run() {
         logger::info(&format!("Quiet mode enabled: {} - {}", start, end));
     }
 
+    // Already resolved: never 0 (a zero sleep is no delay at all) and never
+    // negative, which would wrap through `as u64` to an unreachable future.
     let sleep_seconds = get_notifier_sleep() as u64;
-    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(sleep_seconds));
 
     loop {
+        // `run_once()` awaits every task it spawns, so this is the clean boundary:
+        // nothing is in flight here and nothing needs to be drained.
         run_once().await;
-        interval.tick().await;
+        if sleep_or_shutdown(Duration::from_secs(sleep_seconds), &shutdown).await {
+            logger::info("Stopping notifier loop: shutdown requested.");
+            break;
+        }
     }
 }

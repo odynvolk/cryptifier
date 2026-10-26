@@ -13,8 +13,9 @@ pub struct CurrencyConfig {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AppConfig {
-    pub log_level: Option<String>,
-    pub notifier_sleep: Option<i64>,
+    /// Resolved, never the raw config: the loop and the startup log must read the
+    /// same number an unusable value was corrected to.
+    pub notifier_sleep: NotifierSleep,
     pub telegram_api_key: Option<String>,
     pub telegram_chat_ids: Option<String>,
     pub telegram_get_updates: Option<bool>,
@@ -27,8 +28,7 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            log_level: Some("info".to_string()),
-            notifier_sleep: Some(300),
+            notifier_sleep: NotifierSleep::default(),
             telegram_api_key: None,
             telegram_chat_ids: None,
             telegram_get_updates: Some(false),
@@ -38,6 +38,101 @@ impl Default for AppConfig {
             quiet_mode_end_hour: Some(6),
         }
     }
+}
+
+/// Env var holding the seconds to sleep after each check cycle. Public so the
+/// startup report can name it without repeating the literal.
+pub const NOTIFIER_SLEEP_VAR: &str = "APP__NOTIFIER_SLEEP";
+
+/// Seconds slept when `APP__NOTIFIER_SLEEP` is unset or unusable.
+const DEFAULT_NOTIFIER_SLEEP: i64 = 300;
+
+/// Smallest usable interval. Zero is no delay at all, which would poll back to
+/// back.
+pub const MIN_NOTIFIER_SLEEP: i64 = 1;
+
+/// Largest usable interval — one day. A background price watcher has no reason
+/// to wait longer, and a stray zero (300 -> 30000000) would otherwise stop
+/// monitoring for about a year while the startup log printed the number as if it
+/// were intended. Same failure as any other out-of-range value, only quieter:
+/// the process keeps running and simply never looks again.
+///
+/// Not a crash risk. `tokio::time::sleep` handles an unreachable deadline
+/// without panicking — it does `checked_add` and falls back to
+/// `Instant::far_future()`, and the timer clamps the tick with
+/// `.unwrap_or(MAX_SAFE_MILLIS_DURATION).min(..)`. An earlier revision here
+/// claimed the timer panics via "timer duration exceeds maximum duration";
+/// that error string exists in tokio but `Error::invalid()` has no call sites,
+/// so nothing constructs it.
+pub const MAX_NOTIFIER_SLEEP: i64 = 86_400;
+
+/// Outcome of resolving `APP__NOTIFIER_SLEEP`: the seconds actually slept, plus
+/// the configured text when it was set but could not be used.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NotifierSleep {
+    /// Seconds the loop sleeps after each cycle. Always positive.
+    pub seconds: i64,
+    /// The rejected value, for surfacing at startup instead of being swallowed.
+    pub rejected: Option<String>,
+}
+
+impl Default for NotifierSleep {
+    fn default() -> Self {
+        Self {
+            seconds: DEFAULT_NOTIFIER_SLEEP,
+            rejected: None,
+        }
+    }
+}
+
+/// Resolves the sleep from an arbitrary env lookup, so every fallback branch is
+/// testable without mutating process env (`set_var` is disallowed by
+/// `.clippy.toml`).
+///
+/// Anything outside `MIN_NOTIFIER_SLEEP..=MAX_NOTIFIER_SLEEP`, or unparseable,
+/// falls back to `DEFAULT_NOTIFIER_SLEEP` rather than being clamped to a bound.
+/// A 0 sleep is no delay at all, a negative one wraps through `as u64` and parks
+/// the loop forever, and every cycle makes four external GETs plus a Telegram
+/// send — so clamping to `1` would turn a typo into a fast poll of public
+/// endpoints. The upper end is rejected for the same reason in the other
+/// direction: degrade to something sane, not merely to something in range.
+pub fn resolve_notifier_sleep(lookup: fn(&str) -> Result<String, env::VarError>) -> NotifierSleep {
+    let configured = match lookup(NOTIFIER_SLEEP_VAR) {
+        Ok(raw) => {
+            let raw = raw.trim().to_string();
+            // A key left with no value is not a value — same rule the log level uses.
+            (!raw.is_empty()).then_some(raw)
+        }
+        Err(env::VarError::NotPresent) => None,
+        // Set but not readable as text is still a config the operator got wrong.
+        // Folding it into `NotPresent` would leave `rejected` empty and swallow
+        // it, which is the opposite of what this type exists for. The
+        // placeholder never parses, so the branches below already handle it.
+        Err(env::VarError::NotUnicode(_)) => Some("<not valid UTF-8>".to_string()),
+    };
+
+    let usable = configured
+        .as_deref()
+        .and_then(|raw| raw.parse::<i64>().ok())
+        .filter(|seconds| (MIN_NOTIFIER_SLEEP..=MAX_NOTIFIER_SLEEP).contains(seconds));
+
+    match usable {
+        Some(seconds) => NotifierSleep {
+            seconds,
+            rejected: None,
+        },
+        // Report the configured text, never the fallback, or the operator sees
+        // 300 twice and concludes the config arrived.
+        None => NotifierSleep {
+            seconds: DEFAULT_NOTIFIER_SLEEP,
+            rejected: configured,
+        },
+    }
+}
+
+/// The notifier sleep actually in effect, for the loop and the startup log.
+pub fn effective_notifier_sleep() -> NotifierSleep {
+    CONFIG.notifier_sleep.clone()
 }
 
 /// Global application configuration.
@@ -63,8 +158,9 @@ pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
 
     logger::debug(&format!("Loaded currencies: {:?}", currencies));
     AppConfig {
-        log_level: env::var("APP__LOG_LEVEL").ok(),
-        notifier_sleep: env::var("APP__NOTIFIER_SLEEP").ok().and_then(|s| s.parse().ok()),
+        // `env::var` cannot be passed directly — it is polymorphic over
+        // `K: AsRef<OsStr>` and will not coerce to this higher-ranked parameter.
+        notifier_sleep: resolve_notifier_sleep(|key| env::var(key)),
         telegram_api_key: env::var("APP__TELEGRAM_API_KEY").ok(),
         telegram_chat_ids: env::var("APP__TELEGRAM_CHAT_IDS").ok(),
         telegram_get_updates: env::var("APP__TELEGRAM_GET_UPDATES").ok().and_then(|s| s.parse().ok()),
@@ -80,9 +176,9 @@ pub fn get_currencies() -> Vec<CurrencyConfig> {
     CONFIG.currencies.clone().unwrap_or_default()
 }
 
-/// Returns the notifier sleep interval in seconds.
+/// Returns the notifier sleep interval in seconds, always positive.
 pub fn get_notifier_sleep() -> i64 {
-    CONFIG.notifier_sleep.unwrap_or(300)
+    CONFIG.notifier_sleep.seconds
 }
 
 /// Returns whether quiet mode is enabled.

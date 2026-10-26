@@ -70,6 +70,10 @@ USER cryptifier
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD pgrep -f cryptifier || exit 1
 
+# Docker already defaults to SIGTERM; stated explicitly because graceful shutdown
+# now depends on the process actually receiving it.
+STOPSIGNAL SIGTERM
+
 # Expose no ports (this is a background monitoring service, not a web server)
 
 ENV TZ=Europe/Berlin

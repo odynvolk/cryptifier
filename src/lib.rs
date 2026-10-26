@@ -7,6 +7,7 @@ pub mod http;
 pub mod logger;
 pub mod notifier;
 pub mod notifiers;
+pub mod shutdown;
 pub mod sources;
 
 pub use common::PriceChange;
