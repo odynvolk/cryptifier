@@ -40,8 +40,8 @@ impl Default for AppConfig {
     }
 }
 
-/// Env var holding the seconds to sleep between check cycles. Public so the startup
-/// report can name it without repeating the literal.
+/// Env var holding the seconds to sleep after each check cycle. Public so the
+/// startup report can name it without repeating the literal.
 pub const NOTIFIER_SLEEP_VAR: &str = "APP__NOTIFIER_SLEEP";
 
 /// Seconds slept when `APP__NOTIFIER_SLEEP` is unset or unusable.
@@ -54,11 +54,16 @@ pub const MIN_NOTIFIER_SLEEP: i64 = 1;
 /// Largest usable interval — one day. A background price watcher has no reason
 /// to wait longer, and a stray zero (300 -> 30000000) would otherwise stop
 /// monitoring for about a year while the startup log printed the number as if it
-/// were intended. At the extreme it reaches `Duration::from_secs` and the tokio
-/// timer, which panics rather than parking: `Sleep::poll` is
-/// `Err(e) => panic!("timer error: {e}")` for "timer duration exceeds maximum
-/// duration", and tokio's own `far_future()` is only ~30 years because further
-/// out "overflows on macOS".
+/// were intended. Same failure as any other out-of-range value, only quieter:
+/// the process keeps running and simply never looks again.
+///
+/// Not a crash risk. `tokio::time::sleep` handles an unreachable deadline
+/// without panicking — it does `checked_add` and falls back to
+/// `Instant::far_future()`, and the timer clamps the tick with
+/// `.unwrap_or(MAX_SAFE_MILLIS_DURATION).min(..)`. An earlier revision here
+/// claimed the timer panics via "timer duration exceeds maximum duration";
+/// that error string exists in tokio but `Error::invalid()` has no call sites,
+/// so nothing constructs it.
 pub const MAX_NOTIFIER_SLEEP: i64 = 86_400;
 
 /// Outcome of resolving `APP__NOTIFIER_SLEEP`: the seconds actually slept, plus

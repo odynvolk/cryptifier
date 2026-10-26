@@ -55,6 +55,13 @@ impl Default for LogLevel {
 ///
 /// Only bare words are checked. An explicit `target=level` is a deliberate
 /// choice and passes untouched, so `tokio=trace` keeps working.
+///
+/// Known limitation: this splits on every comma, so a directive carrying a
+/// comma inside a quoted field matcher — `foo[bar{baz="a,b"}]=trace` — splits
+/// into a fragment with no `=` that is not a level, and the whole value is
+/// rejected. Deliberate: splitting correctly around brackets and quotes is not
+/// worth it for a form nobody configures on a price watcher, and a rejection is
+/// reported at startup rather than silently installed.
 fn installs_useful_directives(directives: &str) -> bool {
     if tracing_subscriber::EnvFilter::try_new(directives).is_err() {
         return false;
@@ -62,9 +69,10 @@ fn installs_useful_directives(directives: &str) -> bool {
 
     directives.split(',').all(|part| {
         let part = part.trim();
-        // `LevelFilter::from_str` accepts the empty string as `off`, so an empty
-        // part has to be excluded separately or a trailing comma disables
-        // logging through the very check meant to prevent it.
+        // `LevelFilter::from_str("")` succeeds, as `ERROR`. `EnvFilter` itself
+        // drops empty comma-parts, so without this a trailing comma would pass
+        // the level check and install a filter validated against a part that was
+        // never actually a directive.
         part.contains('=') || (!part.is_empty() && LevelFilter::from_str(part).is_ok())
     })
 }

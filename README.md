@@ -35,18 +35,18 @@ measured change, not the threshold.
 | Var | Default | Purpose |
 |---|---|---|
 | `APP__CURRENCIES` | `[{"ticker":"bitcoin","percentage_threshold":2.0},{"ticker":"ethereum","percentage_threshold":2.0}]` | JSON list of coins + move threshold (%) |
-| `APP__NOTIFIER_SLEEP` | `300` | Seconds to sleep once a check has finished. Seconds to sleep once a check has finished. Anything outside `1` to `86400` (a day), or unparseable, falls back to `300` and is reported at startup as an error |
+| `APP__NOTIFIER_SLEEP` | `300` | Seconds to sleep once a check has finished. Anything outside `1` to `86400` inclusive (a day), or unparseable, falls back to `300` |
 | `APP__TELEGRAM_API_KEY` | — | Telegram bot token |
-| `APP__TELEGRAM_CHAT_IDS` | — | Chat IDs to notify, comma-separated |
+| `APP__TELEGRAM_CHAT_IDS` | — | Chat IDs to notify, comma-separated. At most 30 are attempted per alert; any surplus is reported as an error rather than sent |
 | `APP__TELEGRAM_GET_UPDATES` | `false` | Also discover chat IDs from Telegram `getUpdates` (cached 10 min) |
 | `APP__QUIET_MODE_ENABLED` | `false` | Suppress alerts during a window |
 | `APP__QUIET_MODE_START_HOUR` / `END_HOUR` | `0` / `6` | Quiet window (24h hours); equal hours means all day |
-| `APP__LOG_LEVEL` | `info` | A level (`off`, `error`, `warn`, `info`, `debug`, `trace`, any case) or `target=level` pairs such as `tokio=trace`. A bare module name is rejected rather than installed, because it silences every log line. Anything rejected falls back to `info` and is reported at startup |
+| `APP__LOG_LEVEL` | `info` | A level (`off`, `error`, `warn`, `info`, `debug`, `trace`, any case, or the number `0`–`5`) or `target=level` pairs such as `tokio=trace`. A bare module name is rejected rather than installed, because it silences every log line |
 
 Config is read once at startup from the process env — set these before running.
 Startup then logs what is genuinely in effect: the `.env` path tried, the log
-level, and the notifier sleep. A rejected sleep is an ERROR line; a rejected log
-level only shows up here as `Log level: info`.
+level, and the notifier sleep. A value that was set but could not be used is an
+ERROR line naming it, followed by the one actually in effect.
 
 ## Data sources
 
@@ -96,8 +96,8 @@ Telegram send is cancelled half-way — and the process then exits `0`.
 
 Draining takes real time. A worst-case cycle burns ~25 s of HTTP timeouts:
 CoinGecko 5 s, the bitcoin sources' `join!` 10 s, Telegram's `getUpdates` 5 s (only
-on a cache older than 10 min), then 5 s for the messages — sent concurrently, so
-the count of chat IDs does not add to it. `docker-compose.yml` therefore sets
+on a cache older than 10 min), then 5 s for the messages — sent concurrently, and
+bounded to 30 per alert, so the count of chat IDs cannot add to it. `docker-compose.yml` therefore sets
 `stop_grace_period: 45s`; without it Docker kills the container at its 10 s
 default and the exit code is `137`. Compose only — a container started with a
 plain `docker run` needs `docker stop -t 45 <name>` instead.

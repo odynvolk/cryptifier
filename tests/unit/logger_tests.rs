@@ -51,8 +51,11 @@ fn log_level_keeps_multi_directive_values() {
 
 #[test]
 fn log_level_rejects_a_typo_inside_a_multi_directive_value() {
-    // The per-part check has to apply to every part, or a typo hidden behind a
-    // valid first directive installs a filter matching nothing.
+    // The per-part check has to apply to every part. Note `info` here would
+    // still have worked — each comma-part is parsed independently, so this is
+    // rejected for the same strictness reason as a whole-value `deubg`: a bare
+    // word that is not a level is more often a typo than a deliberate target,
+    // and the deliberate spelling is `target=level`.
     let resolved = resolve_log_level(|_| Ok("info,deubg".to_string()));
     assert_eq!(resolved.directives, "info");
     assert_eq!(resolved.rejected.as_deref(), Some("info,deubg"));
@@ -98,10 +101,9 @@ fn log_level_reports_a_value_that_is_not_valid_utf8() {
     // operator got wrong rather than one left alone.
     let resolved = resolve_log_level(|_| Err(VarError::NotUnicode(OsString::from("debug"))));
     assert_eq!(resolved.directives, "info");
-    assert!(
-        resolved.rejected.is_some(),
-        "a set-but-unreadable value must still be reported, not defaulted silently"
-    );
+    // Pinned to the literal rather than `is_some()`: `main.rs` interpolates this
+    // straight into the startup message.
+    assert_eq!(resolved.rejected.as_deref(), Some("<not valid UTF-8>"));
 }
 
 #[test]
@@ -136,8 +138,10 @@ fn log_level_accepts_a_level_in_any_case() {
 
 #[test]
 fn log_level_rejects_a_trailing_comma() {
-    // `LevelFilter::from_str("")` succeeds as `off`, so without an explicit
-    // guard a trailing comma would clear the other branch's validation.
+    // `LevelFilter::from_str("")` succeeds as `ERROR`, so without the guard an
+    // empty part clears the level check and the value is accepted — even though
+    // `EnvFilter` would then discard that part, so what gets installed was
+    // never validated as written.
     let resolved = resolve_log_level(|_| Ok("info,".to_string()));
     assert_eq!(resolved.directives, "info");
     assert_eq!(resolved.rejected.as_deref(), Some("info,"));

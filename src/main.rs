@@ -84,7 +84,7 @@ fn log_startup_config(dotenv_outcome: &DotenvOutcome) {
     let log_level = logger::effective_log_level();
     if let Some(configured) = &log_level.rejected {
         logger::error(&format!(
-            "Ignoring {}='{}': not a log level (off, error, warn, info, debug, trace) and not a `target=level` directive. Using '{}'.",
+            "Ignoring {}='{}': not a log level (off, error, warn, info, debug, trace, or 0-5) and not a `target=level` directive. Using '{}'.",
             logger::LOG_LEVEL_VAR,
             configured,
             log_level.directives
@@ -101,7 +101,7 @@ fn log_startup_config(dotenv_outcome: &DotenvOutcome) {
         // typo is still a typo. Keeps running, because a wrong interval is not a
         // reason to stop monitoring.
         logger::error(&format!(
-            "Ignoring {}='{}': not a whole number of seconds within {}..{}. Using {}s.",
+            "Ignoring {}='{}': not a whole number of seconds from {} to {} inclusive. Using {}s.",
             config::NOTIFIER_SLEEP_VAR,
             configured,
             config::MIN_NOTIFIER_SLEEP,

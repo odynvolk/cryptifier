@@ -79,9 +79,11 @@ fn config_notifier_sleep_rejects_more_than_a_day() {
 }
 
 #[test]
-fn config_notifier_sleep_rejects_i64_max_instead_of_passing_it_to_the_timer() {
-    // The extreme of the same hole: it used to reach `Duration::from_secs`,
-    // where the tokio timer panics rather than parking the task quietly.
+fn config_notifier_sleep_rejects_i64_max_as_out_of_range() {
+    // Rejected purely as out of range. Not a crash risk — tokio's `sleep` clamps
+    // an unreachable deadline rather than panicking — but parking for a few
+    // decades is the same silent loss of monitoring as any other value past the
+    // bound.
     let resolved = resolve_notifier_sleep(|_| Ok(i64::MAX.to_string()));
     assert_eq!(resolved.seconds, 300);
     assert_eq!(resolved.rejected.as_deref(), Some(i64::MAX.to_string().as_str()));
@@ -100,8 +102,7 @@ fn config_notifier_sleep_reports_a_value_that_is_not_valid_utf8() {
     // operator got wrong rather than one left alone.
     let resolved = resolve_notifier_sleep(|_| Err(VarError::NotUnicode(OsString::from("300"))));
     assert_eq!(resolved.seconds, 300);
-    assert!(
-        resolved.rejected.is_some(),
-        "a set-but-unreadable value must still be reported, not defaulted silently"
-    );
+    // Pinned to the literal rather than `is_some()`: `main.rs` interpolates this
+    // straight into the startup message, so an arbitrary placeholder passing.
+    assert_eq!(resolved.rejected.as_deref(), Some("<not valid UTF-8>"));
 }
