@@ -77,14 +77,20 @@ async fn wait_still_resolves_when_called_again_after_the_request() {
     let shutdown = Shutdown::new();
     shutdown.request();
 
-    // Consume the notification, so a second caller can no longer see a change.
+    // Consume nothing: this first call resolves via the re-check in `wait()`.
     shutdown.wait().await;
 
+    // Pins the observable behaviour, not the mechanism. It passes with and
+    // without the re-check, because a clone inherits the initial cursor and so
+    // still sees the request. Kept as the net for the refactor that *would*
+    // make the re-check load-bearing — advancing a stored receiver, or using
+    // `subscribe()`.
+    //
     // Timeout in virtual time: a future that never resolves fails the assert
     // instead of hanging the runner.
     let second = tokio::time::timeout(Duration::from_secs(1), shutdown.wait()).await;
     assert!(
         second.is_ok(),
-        "a second wait() blocked after the notification was already consumed"
+        "a second wait() blocked after the request had already been made"
     );
 }
