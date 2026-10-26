@@ -41,7 +41,7 @@ measured change, not the threshold.
 | `APP__TELEGRAM_GET_UPDATES` | `false` | Also discover chat IDs from Telegram `getUpdates` (cached 10 min) |
 | `APP__QUIET_MODE_ENABLED` | `false` | Suppress alerts during a window |
 | `APP__QUIET_MODE_START_HOUR` / `END_HOUR` | `0` / `6` | Quiet window (24h hours); equal hours means all day |
-| `APP__LOG_LEVEL` | `info` | Any `EnvFilter` directives (e.g. `debug`). Blank or invalid falls back to `info` |
+| `APP__LOG_LEVEL` | `info` | A level (`off`, `error`, `warn`, `info`, `debug`, `trace`, any case) or `target=level` pairs such as `tokio=trace`. A bare module name is rejected rather than installed, because it silences every log line. Anything rejected falls back to `info` and is reported at startup |
 
 Config is read once at startup from the process env — set these before running.
 Startup then logs what is genuinely in effect: the `.env` path tried, the log

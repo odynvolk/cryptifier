@@ -77,7 +77,20 @@ fn log_startup_config(dotenv_outcome: &DotenvOutcome) {
         None => logger::info("Working directory unavailable; using process environment"),
     }
 
-    logger::info(&format!("Log level: {}", logger::effective_log_level()));
+    // A value that was set but could not be used has to be named, or a typo
+    // reads as an intentional default. This one matters more than the others:
+    // a wrong level is what makes every other startup line disappear, so the
+    // report is emitted at ERROR against the filter actually installed.
+    let log_level = logger::effective_log_level();
+    if let Some(configured) = &log_level.rejected {
+        logger::error(&format!(
+            "Ignoring {}='{}': not a log level (off, error, warn, info, debug, trace) and not a `target=level` directive. Using '{}'.",
+            logger::LOG_LEVEL_VAR,
+            configured,
+            log_level.directives
+        ));
+    }
+    logger::info(&format!("Log level: {}", log_level.directives));
 
     // The loop sleeps this same resolved value, so the number printed here is
     // the number in effect even when the configured one was discarded.
@@ -88,7 +101,9 @@ fn log_startup_config(dotenv_outcome: &DotenvOutcome) {
         // typo is still a typo. Keeps running, because a wrong interval is not a
         // reason to stop monitoring.
         logger::error(&format!(
-            "Ignoring APP__NOTIFIER_SLEEP='{configured}': not a whole number of seconds within {}..{}. Using {}s.",
+            "Ignoring {}='{}': not a whole number of seconds within {}..{}. Using {}s.",
+            config::NOTIFIER_SLEEP_VAR,
+            configured,
             config::MIN_NOTIFIER_SLEEP,
             config::MAX_NOTIFIER_SLEEP,
             notifier_sleep.seconds

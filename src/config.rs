@@ -13,7 +13,6 @@ pub struct CurrencyConfig {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AppConfig {
-    pub log_level: Option<String>,
     /// Resolved, never the raw config: the loop and the startup log must read the
     /// same number an unusable value was corrected to.
     pub notifier_sleep: NotifierSleep,
@@ -29,7 +28,6 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            log_level: Some("info".to_string()),
             notifier_sleep: NotifierSleep::default(),
             telegram_api_key: None,
             telegram_chat_ids: None,
@@ -42,8 +40,9 @@ impl Default for AppConfig {
     }
 }
 
-/// Env var holding the seconds to sleep between check cycles.
-const NOTIFIER_SLEEP_VAR: &str = "APP__NOTIFIER_SLEEP";
+/// Env var holding the seconds to sleep between check cycles. Public so the startup
+/// report can name it without repeating the literal.
+pub const NOTIFIER_SLEEP_VAR: &str = "APP__NOTIFIER_SLEEP";
 
 /// Seconds slept when `APP__NOTIFIER_SLEEP` is unset or unusable.
 const DEFAULT_NOTIFIER_SLEEP: i64 = 300;
@@ -126,11 +125,6 @@ pub fn resolve_notifier_sleep(lookup: fn(&str) -> Result<String, env::VarError>)
     }
 }
 
-/// Reads a var with the exact signature `resolve_notifier_sleep` expects.
-fn lookup_var(key: &str) -> Result<String, env::VarError> {
-    env::var(key)
-}
-
 /// The notifier sleep actually in effect, for the loop and the startup log.
 pub fn effective_notifier_sleep() -> NotifierSleep {
     CONFIG.notifier_sleep.clone()
@@ -159,8 +153,9 @@ pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| {
 
     logger::debug(&format!("Loaded currencies: {:?}", currencies));
     AppConfig {
-        log_level: env::var("APP__LOG_LEVEL").ok(),
-        notifier_sleep: resolve_notifier_sleep(lookup_var),
+        // `env::var` cannot be passed directly — it is polymorphic over
+        // `K: AsRef<OsStr>` and will not coerce to this higher-ranked parameter.
+        notifier_sleep: resolve_notifier_sleep(|key| env::var(key)),
         telegram_api_key: env::var("APP__TELEGRAM_API_KEY").ok(),
         telegram_chat_ids: env::var("APP__TELEGRAM_CHAT_IDS").ok(),
         telegram_get_updates: env::var("APP__TELEGRAM_GET_UPDATES").ok().and_then(|s| s.parse().ok()),
